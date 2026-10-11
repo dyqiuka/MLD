@@ -6,7 +6,8 @@ import 'package:prj/core/theme/app_colors.dart';
 import 'package:prj/features/auth/domain/models/user_model.dart';
 import 'package:prj/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:prj/features/profile_membership/presentation/controllers/profile_controller.dart';
-import 'package:prj/features/treatment_care/presentation/screens/medical_records_screen.dart';
+import 'package:prj/features/treatment_care/presentation/screens/my_treatment_packages_screen.dart';
+import 'package:prj/features/vocational_training/presentation/screens/my_courses_screen.dart';
 import 'package:prj/features/booking_payment/presentation/screens/my_appointments_screen.dart';
 import 'edit_profile_screen.dart';
 import 'membership_card_screen.dart';
@@ -71,7 +72,7 @@ class ProfileScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          '${user.phone ?? '0912 345 678'} · Đã xác thực',
+                          '${user.phone.isNotEmpty ? user.phone : '0912 345 678'} · Đã xác thực',
                           style: const TextStyle(
                             fontSize: 13,
                             color: AppColors.textSecondary,
@@ -270,7 +271,7 @@ class ProfileScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => const MedicalRecordsScreen(),
+                          builder: (_) => const MyTreatmentPackagesScreen(),
                         ),
                       );
                     },
@@ -282,11 +283,10 @@ class ProfileScreen extends StatelessWidget {
                     value: '1',
                     label: 'Khóa học\nđang học',
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Chuyển đến Học viện...'),
-                          backgroundColor: AppColors.primary,
-                          duration: Duration(seconds: 1),
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const MyCoursesScreen(),
                         ),
                       );
                     },
@@ -326,7 +326,7 @@ class ProfileScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => const MedicalRecordsScreen(),
+                      builder: (_) => const MyTreatmentPackagesScreen(),
                     ),
                   );
                 },

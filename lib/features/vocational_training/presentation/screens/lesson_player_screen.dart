@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:prj/core/theme/app_colors.dart';
-import 'package:prj/core/widgets/custom_button.dart';
 import 'package:prj/features/vocational_training/domain/models/course_model.dart';
-import '../controllers/course_controller.dart';
 import 'quiz_assessment_screen.dart';
 
+/// Frame E09 in Group E: Bài học (Lesson Player & Study Notes)
 class LessonPlayerScreen extends StatefulWidget {
   final CourseModel course;
   final LessonModel lesson;
@@ -20,334 +18,151 @@ class LessonPlayerScreen extends StatefulWidget {
   State<LessonPlayerScreen> createState() => _LessonPlayerScreenState();
 }
 
-class _LessonPlayerScreenState extends State<LessonPlayerScreen> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
+class _LessonPlayerScreenState extends State<LessonPlayerScreen> {
+  int _selectedTab = 0; // 0: Nội dung, 1: Tài liệu, 2: Ghi chú
+  final List<String> _tabs = ['Nội dung', 'Tài liệu', 'Ghi chú'];
+  bool _isPlaying = false;
+  double _sliderValue = 3.33; // 3m20s of 18m
 
   @override
   Widget build(BuildContext context) {
-    final courseCtrl = context.watch<CourseController>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final activeLesson = courseCtrl.currentLesson ?? widget.lesson;
-    final speeds = [0.75, 1.0, 1.25, 1.5, 2.0];
-
     return Scaffold(
-      backgroundColor: isDark ? AppColors.backgroundDark : Colors.white,
-      appBar: AppBar(
-        title: Text(
-          widget.course.title,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
-        ),
-      ),
-      body: Column(
-        children: [
-          // Simulated Cinematic Video Player
-          Container(
-            height: 220,
-            width: double.infinity,
-            color: Colors.black,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                // Video thumbnail background
-                Opacity(
-                  opacity: 0.45,
-                  child: Image.network(
-                    widget.course.thumbnailUrl,
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    height: double.infinity,
-                    errorBuilder: (context, error, stackTrace) => Container(color: Colors.black),
-                  ),
-                ),
-                // Play / Pause Action Center
-                IconButton(
-                  iconSize: 56,
-                  icon: Icon(
-                    courseCtrl.isPlaying ? Icons.pause_circle_filled_rounded : Icons.play_circle_fill_rounded,
-                    color: Colors.white,
-                  ),
-                  onPressed: courseCtrl.togglePlayPause,
-                ),
-                // Bottom Player Controls (Timeline, Timer, Fullscreen)
-                Positioned(
-                  bottom: 8,
-                  left: 12,
-                  right: 12,
-                  child: Column(
-                    children: [
-                      SliderTheme(
-                        data: SliderTheme.of(context).copyWith(
-                          trackHeight: 3,
-                          thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-                          overlayShape: const RoundSliderOverlayShape(overlayRadius: 10),
-                          activeTrackColor: AppColors.primary,
-                          inactiveTrackColor: Colors.white30,
-                          thumbColor: AppColors.primary,
-                        ),
-                        child: Slider(
-                          value: courseCtrl.currentPositionSeconds,
-                          min: 0.0,
-                          max: courseCtrl.totalDurationSeconds,
-                          onChanged: courseCtrl.seekTo,
+      backgroundColor: isDark ? AppColors.backgroundDark : const Color(0xFFFBF8F5),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Top Bar
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  InkWell(
+                    onTap: () => Navigator.pop(context),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: isDark ? AppColors.surfaceDark : Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isDark ? AppColors.borderDark : const Color(0xFFE5DDD5),
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '${(courseCtrl.currentPositionSeconds ~/ 60).toString().padLeft(2, '0')}:${(courseCtrl.currentPositionSeconds.toInt() % 60).toString().padLeft(2, '0')} / ${activeLesson.durationMinutes}:00',
-                              style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
-                            ),
-                            Row(
-                              children: [
-                                const Icon(Icons.hd_outlined, color: Colors.white70, size: 18),
-                                const SizedBox(width: 10),
-                                const Icon(Icons.fullscreen_rounded, color: Colors.white, size: 20),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                      child: const Icon(Icons.arrow_back, color: Color(0xFF2C241E), size: 20),
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ),
-
-          // Speed Selector Row
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.surfaceDark : const Color(0xFFF8FAFC),
-              border: Border(
-                bottom: BorderSide(
-                  color: isDark ? AppColors.borderDark : AppColors.borderLight,
-                ),
+                  const Text(
+                    'Video minh họa',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Color(0xFF9E9187),
+                    ),
+                  ),
+                ],
               ),
             ),
-            child: Row(
-              children: [
-                const Icon(Icons.speed, size: 16, color: AppColors.primary),
-                const SizedBox(width: 8),
-                const Text('Tốc độ phát:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                const Spacer(),
-                ...speeds.map((s) {
-                  final isSelected = courseCtrl.playbackSpeed == s;
-                  return Padding(
-                    padding: const EdgeInsets.only(left: 6),
-                    child: InkWell(
-                      onTap: () => courseCtrl.setPlaybackSpeed(s),
-                      borderRadius: BorderRadius.circular(6),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: isSelected ? AppColors.primary : Colors.transparent,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          '${s}x',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                }),
-              ],
-            ),
-          ),
 
-          // Lesson Title and Mark Completed Button
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  activeLesson.title,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-                    height: 1.35,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Row(
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        icon: Icon(
-                          activeLesson.isCompleted ? Icons.check_circle : Icons.check_circle_outline,
-                          color: activeLesson.isCompleted ? AppColors.success : AppColors.primary,
-                          size: 18,
-                        ),
-                        label: Text(
-                          activeLesson.isCompleted ? 'Đã hoàn thành bài học' : 'Đánh dấu đã học xong',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: activeLesson.isCompleted ? AppColors.success : AppColors.primary,
-                          ),
-                        ),
-                        onPressed: () => courseCtrl.markLessonCompleted(activeLesson.id),
+                    const Text(
+                      'Bài học',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF2C241E),
                       ),
                     ),
-                    const SizedBox(width: 10),
-                    CustomButton(
-                      text: 'Làm Quiz',
-                      height: 40,
-                      onPressed: () {
-                        courseCtrl.resetQuiz();
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const QuizAssessmentScreen(),
+                    const SizedBox(height: 16),
+
+                    // Video Mockup Player
+                    Container(
+                      height: 200,
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(18),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
                           ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          // Tabs: Syllabus & Notes
-          TabBar(
-            controller: _tabController,
-            indicatorColor: AppColors.primary,
-            labelColor: AppColors.primary,
-            unselectedLabelColor: isDark ? AppColors.textMutedDark : AppColors.textSecondaryLight,
-            tabs: const [
-              Tab(text: 'Danh sách bài học'),
-              Tab(text: 'Tóm tắt bài giảng'),
-            ],
-          ),
-
-          // Tab Content
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                // TAB 1: Lessons in Course
-                ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: widget.course.modules.length,
-                  itemBuilder: (context, modIdx) {
-                    final module = widget.course.modules[modIdx];
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          module.title,
-                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.primary),
-                        ),
-                        const SizedBox(height: 8),
-                        ...module.lessons.map((les) {
-                          final isCurrent = les.id == activeLesson.id;
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            decoration: BoxDecoration(
-                              color: isCurrent
-                                  ? (isDark ? const Color(0xFF0C244C) : AppColors.primaryLight)
-                                  : Theme.of(context).cardTheme.color,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: isCurrent ? AppColors.primary : (isDark ? AppColors.borderDark : AppColors.borderLight),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(18),
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            Image.network(
+                              'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800',
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) => Container(
+                                color: Colors.black87,
+                                child: const Icon(Icons.videocam, color: Colors.white, size: 48),
                               ),
                             ),
-                            child: ListTile(
-                              dense: true,
-                              leading: Icon(
-                                les.isCompleted ? Icons.check_circle : Icons.play_circle_outline,
-                                color: les.isCompleted ? AppColors.success : AppColors.primary,
-                              ),
-                              title: Text(
-                                les.title,
-                                style: TextStyle(
-                                  fontSize: 12.5,
-                                  fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w500,
+                            Container(
+                              color: Colors.black.withValues(alpha: 0.35),
+                            ),
+                            // Center Play Button
+                            Center(
+                              child: InkWell(
+                                onTap: () => setState(() => _isPlaying = !_isPlaying),
+                                child: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withValues(alpha: 0.5),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    _isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                                    color: Colors.white,
+                                    size: 36,
+                                  ),
                                 ),
                               ),
-                              subtitle: Text('${les.durationMinutes} phút'),
-                              onTap: () => courseCtrl.selectLesson(les),
                             ),
-                          );
-                        }),
-                        const SizedBox(height: 12),
-                      ],
-                    );
-                  },
-                ),
-
-                // TAB 2: Lesson Notes
-                SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Mục tiêu học tập & Kỹ năng đạt được:',
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        activeLesson.summary.isNotEmpty
-                            ? activeLesson.summary
-                            : 'Nắm vững các thao tác kỹ thuật y tế chuẩn thực hành lâm sàng, đảm bảo tiêu chuẩn an toàn cho bệnh nhân.',
-                        style: TextStyle(
-                          fontSize: 13,
-                          height: 1.5,
-                          color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: isDark ? AppColors.cardDark : const Color(0xFFF1F5F9),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          children: [
-                            CircleAvatar(
-                              radius: 20,
-                              backgroundImage: NetworkImage(widget.course.instructorAvatar),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
+                            // Bottom Control Strip
+                            Positioned(
+                              bottom: 8,
+                              left: 12,
+                              right: 12,
                               child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Text(
-                                    widget.course.instructorName,
-                                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: const [
+                                      Text(
+                                        '03:20 / 18:00',
+                                        style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+                                      ),
+                                      Text(
+                                        '1x · Full HD',
+                                        style: TextStyle(color: Colors.white70, fontSize: 11),
+                                      ),
+                                    ],
                                   ),
-                                  Text(
-                                    widget.course.instructorTitle,
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                                  SliderTheme(
+                                    data: SliderTheme.of(context).copyWith(
+                                      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
+                                      trackHeight: 3,
+                                      activeTrackColor: const Color(0xFFD97706),
+                                      inactiveTrackColor: Colors.white30,
+                                      thumbColor: Colors.white,
+                                    ),
+                                    child: Slider(
+                                      value: _sliderValue,
+                                      max: 18.0,
+                                      onChanged: (v) => setState(() => _sliderValue = v),
                                     ),
                                   ),
                                 ],
@@ -356,13 +171,177 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen> with SingleTick
                           ],
                         ),
                       ),
-                    ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Lesson Meta
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF7F1EB),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text(
+                        'Chương 2 · Video 18 phút',
+                        style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF8B5E34)),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+
+                    Text(
+                      widget.lesson.title.isNotEmpty ? widget.lesson.title : 'Bài 05: Kỹ thuật Massage cơ bản',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF2C241E),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      widget.course.title,
+                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF7A6E65)),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Giảng viên ${widget.course.instructorName}',
+                      style: const TextStyle(fontSize: 12.5, color: Color(0xFF8B5E34), fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Ảnh và điều khiển video là minh họa tĩnh, không phát nội dung thực tế.',
+                      style: TextStyle(fontSize: 11, color: Color(0xFF9E9187), fontStyle: FontStyle.italic),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Tabs: [ Nội dung ] [ Tài liệu ] [ Ghi chú ]
+                    Row(
+                      children: List.generate(_tabs.length, (idx) {
+                        final isSelected = _selectedTab == idx;
+                        return Expanded(
+                          child: InkWell(
+                            onTap: () => setState(() => _selectedTab = idx),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              decoration: BoxDecoration(
+                                border: Border(
+                                  bottom: BorderSide(
+                                    color: isSelected ? const Color(0xFF8B5E34) : Colors.transparent,
+                                    width: 2.5,
+                                  ),
+                                ),
+                              ),
+                              child: Text(
+                                _tabs[idx],
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                  color: isSelected ? const Color(0xFF8B5E34) : const Color(0xFF7A6E65),
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Section: Sau bài học này, bạn có thể
+                    const Text(
+                      'Sau bài học này, bạn có thể',
+                      style: TextStyle(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF2C241E),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      '• Nắm vững tư thế đứng và điều chỉnh trọng tâm khi thao tác.\n'
+                      '• Thực hiện thành thạo các động tác vuốt, miết, day và ấn huyệt cơ bản.\n'
+                      '• Cảm nhận và điều chỉnh lực tiếp xúc phù hợp với phản hồi của khách hàng.',
+                      style: TextStyle(fontSize: 12.5, color: Color(0xFF5A4D41), height: 1.5),
+                    ),
+                    const SizedBox(height: 32),
+                  ],
+                ),
+              ),
+            ),
+
+            // Bottom Buttons: Hoàn thành bài học (leads to E10) & Bài tiếp theo
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.surfaceDark : Colors.white,
+                border: Border(
+                  top: BorderSide(
+                    color: isDark ? AppColors.borderDark : const Color(0xFFE5DDD5),
                   ),
                 ),
-              ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const QuizAssessmentScreen(),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF8B5E34),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Hoàn thành bài học',
+                        style: TextStyle(
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 46,
+                    child: OutlinedButton(
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Đang chuyển sang bài tiếp theo...')),
+                        );
+                      },
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Color(0xFFE5DDD5)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Bài tiếp theo',
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF5A4D41),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

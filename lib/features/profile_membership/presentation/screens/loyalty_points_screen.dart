@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:prj/core/theme/app_colors.dart';
 import 'package:prj/features/profile_membership/presentation/controllers/profile_controller.dart';
+import 'my_offers_screen.dart';
 
 class LoyaltyPointsScreen extends StatelessWidget {
   const LoyaltyPointsScreen({super.key});
@@ -9,7 +11,6 @@ class LoyaltyPointsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final profile = context.watch<ProfileController>();
-    final tier = profile.currentTierInfo;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -140,8 +141,12 @@ class LoyaltyPointsScreen extends StatelessWidget {
               height: 50,
               child: ElevatedButton(
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Đang mở danh sách ưu đãi...'), backgroundColor: AppColors.primary),
+                  HapticFeedback.lightImpact();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const MyOffersScreen(),
+                    ),
                   );
                 },
                 style: ElevatedButton.styleFrom(

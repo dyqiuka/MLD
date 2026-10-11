@@ -165,7 +165,7 @@ class ProfessionalListScreen extends StatelessWidget {
               width: 80,
               height: 80,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(width: 80, height: 80, color: AppColors.borderLight),
+              errorBuilder: (context, error, stackTrace) => Container(width: 80, height: 80, color: AppColors.borderLight),
             ),
           ),
           const SizedBox(width: 16),

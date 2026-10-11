@@ -1,290 +1,279 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:prj/core/constants/app_constants.dart';
 import 'package:prj/core/theme/app_colors.dart';
-import 'package:prj/core/widgets/custom_button.dart';
-import 'package:prj/features/auth/presentation/controllers/auth_controller.dart';
-import '../controllers/course_controller.dart';
+import 'learning_result_screen.dart';
 
-class QuizAssessmentScreen extends StatelessWidget {
+/// Frame E10 in Group E: Kiểm tra kiến thức
+class QuizAssessmentScreen extends StatefulWidget {
   const QuizAssessmentScreen({super.key});
 
-  void _showCertificateDialog(BuildContext context, String studentName, int score) {
+  @override
+  State<QuizAssessmentScreen> createState() => _QuizAssessmentScreenState();
+}
+
+class _QuizAssessmentScreenState extends State<QuizAssessmentScreen> {
+  int _selectedOption = 0; // Option A selected by default
+  final List<String> _options = [
+    'A. Kiểm tra thông tin và nhu cầu khách hàng.',
+    'B. Chuẩn bị chương trình ưu đãi.',
+    'C. Giới thiệu thêm sản phẩm.',
+    'D. Bắt đầu ngay không cần tư vấn.',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogCtx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        contentPadding: const EdgeInsets.all(24),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
+    return Scaffold(
+      backgroundColor: isDark ? AppColors.backgroundDark : const Color(0xFFFBF8F5),
+      body: SafeArea(
+        child: Column(
           children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: const BoxDecoration(
-                color: Color(0xFFFEF3C7),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.workspace_premium_rounded, size: 56, color: AppColors.gold),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'CHỨNG CHỈ TỐT NGHIỆP XUẤT SẮC',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w800,
-                color: AppColors.gold,
-                letterSpacing: 0.8,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              studentName,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-              ),
-            ),
-            const SizedBox(height: 6),
-            const Text(
-              'Đã hoàn thành xuất sắc Khóa Huấn luyện & Đạt bài Đánh giá Thực hành Lâm sàng Y tế',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 12, color: Colors.grey, height: 1.4),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.surfaceDark : const Color(0xFFF1F5F9),
-                borderRadius: BorderRadius.circular(12),
-              ),
+            // Top Bar
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    children: [
-                      const Text('Điểm số', style: TextStyle(fontSize: 11, color: Colors.grey)),
-                      Text(
-                        '$score/100',
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.success),
+                  InkWell(
+                    onTap: () => Navigator.pop(context),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: isDark ? AppColors.surfaceDark : Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isDark ? AppColors.borderDark : const Color(0xFFE5DDD5),
+                        ),
                       ),
-                    ],
+                      child: const Icon(Icons.arrow_back, color: Color(0xFF2C241E), size: 20),
+                    ),
                   ),
-                  Column(
-                    children: const [
-                      Text('Xếp loại', style: TextStyle(fontSize: 11, color: Colors.grey)),
-                      Text(
-                        'XUẤT SẮC',
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.primary),
-                      ),
-                    ],
+                  const Text(
+                    'Bài kiểm tra minh họa',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Color(0xFF9E9187),
+                    ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 20),
-            CustomButton(
-              text: 'Tải Chứng Chỉ Số (PDF)',
-              width: double.infinity,
-              icon: Icons.download_rounded,
-              onPressed: () {
-                Navigator.pop(dialogCtx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Đã lưu chứng chỉ số vào bộ nhớ máy!')),
-                );
-                Navigator.pop(context);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
-  @override
-  Widget build(BuildContext context) {
-    final courseCtrl = context.watch<CourseController>();
-    final auth = context.watch<AuthController>();
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final questions = AppConstants.sampleQuizQuestions;
-    final currentQ = questions[courseCtrl.currentQuizQuestionIndex];
-    final selectedOption = courseCtrl.userSelectedAnswers[courseCtrl.currentQuizQuestionIndex];
-
-    final studentName = auth.currentUser?.name ?? 'Lê Hoàng Yến Nhi';
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Đánh Giá Năng Lực Sau Bài Học'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh_rounded),
-            onPressed: courseCtrl.resetQuiz,
-          ),
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Progress Bar
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Câu hỏi ${courseCtrl.currentQuizQuestionIndex + 1} / ${questions.length}',
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.primary),
-                ),
-                Text(
-                  'Đạt tối thiểu 70% để cấp chứng chỉ',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: isDark ? AppColors.textMutedDark : AppColors.textSecondaryLight,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(6),
-              child: LinearProgressIndicator(
-                value: (courseCtrl.currentQuizQuestionIndex + 1) / questions.length,
-                minHeight: 8,
-                backgroundColor: isDark ? const Color(0xFF1E2D4A) : const Color(0xFFE2E8F0),
-                valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Question Card
-            Container(
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: Theme.of(context).cardTheme.color,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                  color: isDark ? AppColors.borderDark : AppColors.borderLight,
-                ),
-              ),
-              child: Text(
-                currentQ.question,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-                  height: 1.45,
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Options List
             Expanded(
-              child: ListView.builder(
-                itemCount: currentQ.options.length,
-                itemBuilder: (context, optIdx) {
-                  final isSelected = selectedOption == optIdx;
-                  final optionText = currentQ.options[optIdx];
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Kiểm tra kiến thức',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF2C241E),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Kỹ thuật Massage Chuyên Nghiệp',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF7A6E65),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    const Text(
+                      'Bài kiểm tra: Kiến thức Spa cơ bản',
+                      style: TextStyle(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF8B5E34),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
 
-                  return InkWell(
-                    onTap: () {
-                      courseCtrl.selectQuizAnswer(courseCtrl.currentQuizQuestionIndex, optIdx);
-                    },
-                    borderRadius: BorderRadius.circular(14),
-                    child: Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    // Counter & Timer
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: const [
+                        Text(
+                          'Câu 3 / 20',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF2C241E),
+                          ),
+                        ),
+                        Text(
+                          '⏱ 18:45',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFFD97706),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    const Text(
+                      'Thời gian tĩnh · Không đếm ngược',
+                      style: TextStyle(fontSize: 11, color: Color(0xFF9E9187), fontStyle: FontStyle.italic),
+                    ),
+                    const SizedBox(height: 18),
+
+                    // Question Card
+                    Container(
+                      padding: const EdgeInsets.all(18),
                       decoration: BoxDecoration(
-                        color: isSelected
-                            ? (isDark ? const Color(0xFF0C244C) : AppColors.primaryLight)
-                            : Theme.of(context).cardTheme.color,
-                        borderRadius: BorderRadius.circular(14),
+                        color: isDark ? AppColors.surfaceDark : const Color(0xFFF7F1EB),
+                        borderRadius: BorderRadius.circular(18),
                         border: Border.all(
-                          color: isSelected
-                              ? AppColors.primary
-                              : (isDark ? AppColors.borderDark : AppColors.borderLight),
-                          width: isSelected ? 2 : 1,
+                          color: isDark ? AppColors.borderDark : const Color(0xFFEADBCE),
                         ),
                       ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 26,
-                            height: 26,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: isSelected ? AppColors.primary : Colors.transparent,
-                              border: Border.all(
-                                color: isSelected ? AppColors.primary : Colors.grey,
-                                width: 1.5,
-                              ),
-                            ),
-                            child: Text(
-                              String.fromCharCode(65 + optIdx), // A, B, C, D
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: isSelected ? Colors.white : Colors.grey,
-                              ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Text(
+                            'Chọn một đáp án phù hợp nhất',
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF8B5E34),
                             ),
                           ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Text(
-                              optionText,
-                              style: TextStyle(
-                                fontSize: 13.5,
-                                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                color: isSelected
-                                    ? AppColors.primary
-                                    : (isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
-                              ),
+                          SizedBox(height: 8),
+                          Text(
+                            'Yếu tố nào cần được ưu tiên trước khi thực hiện dịch vụ chăm sóc khách hàng?',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF2C241E),
+                              height: 1.4,
                             ),
                           ),
                         ],
                       ),
                     ),
-                  );
-                },
+                    const SizedBox(height: 18),
+
+                    // 4 Radio Option Cards
+                    ...List.generate(_options.length, (idx) {
+                      final isSelected = _selectedOption == idx;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: InkWell(
+                          onTap: () => setState(() => _selectedOption = idx),
+                          borderRadius: BorderRadius.circular(14),
+                          child: Container(
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? const Color(0xFFF5ECE3)
+                                  : (isDark ? AppColors.surfaceDark : Colors.white),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: isSelected
+                                    ? const Color(0xFF8B5E34)
+                                    : (isDark ? AppColors.borderDark : const Color(0xFFE5DDD5)),
+                                width: isSelected ? 1.5 : 1,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 22,
+                                  height: 22,
+                                  decoration: BoxDecoration(
+                                    color: isSelected ? const Color(0xFF8B5E34) : Colors.transparent,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: isSelected ? const Color(0xFF8B5E34) : const Color(0xFFC7BDB5),
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                  child: isSelected
+                                      ? const Icon(Icons.circle, size: 10, color: Colors.white)
+                                      : null,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    _options[idx],
+                                    style: TextStyle(
+                                      fontSize: 13.5,
+                                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                      color: const Color(0xFF2C241E),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                    const SizedBox(height: 8),
+
+                    const Text(
+                      'Bài làm hiện tại · Chưa nộp, chưa chấm điểm',
+                      style: TextStyle(fontSize: 11, color: Color(0xFF9E9187), fontStyle: FontStyle.italic),
+                    ),
+                    const SizedBox(height: 32),
+                  ],
+                ),
               ),
             ),
 
-            // Navigation Buttons
-            Row(
-              children: [
-                if (courseCtrl.currentQuizQuestionIndex > 0)
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: courseCtrl.previousQuizQuestion,
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: const Text('Câu trước'),
-                    ),
-                  ),
-                if (courseCtrl.currentQuizQuestionIndex > 0) const SizedBox(width: 12),
-                Expanded(
-                  flex: 2,
-                  child: CustomButton(
-                    text: courseCtrl.currentQuizQuestionIndex == questions.length - 1 ? 'Nộp bài kiểm tra' : 'Câu tiếp theo',
-                    onPressed: () {
-                      if (courseCtrl.currentQuizQuestionIndex < questions.length - 1) {
-                        courseCtrl.nextQuizQuestion();
-                      } else {
-                        courseCtrl.submitQuiz();
-                        _showCertificateDialog(context, studentName, courseCtrl.quizScore);
-                      }
-                    },
+            // Bottom Sticky Bar: Nộp bài (leads to E12)
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.surfaceDark : Colors.white,
+                border: Border(
+                  top: BorderSide(
+                    color: isDark ? AppColors.borderDark : const Color(0xFFE5DDD5),
                   ),
                 ),
-              ],
+              ),
+              child: SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton(
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Đã nộp bài kiểm tra thành công!'),
+                        backgroundColor: Color(0xFF8B5E34),
+                      ),
+                    );
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const LearningResultScreen(),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF8B5E34),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: const Text(
+                    'Nộp bài',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
             ),
           ],
         ),

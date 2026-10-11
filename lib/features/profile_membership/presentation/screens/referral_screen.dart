@@ -37,7 +37,7 @@ class ReferralScreen extends StatelessWidget {
                 height: 180,
                 width: double.infinity,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
+                errorBuilder: (context, error, stackTrace) => Container(
                   height: 180,
                   color: AppColors.primaryLight,
                   child: const Icon(Icons.group, size: 48, color: AppColors.primary),

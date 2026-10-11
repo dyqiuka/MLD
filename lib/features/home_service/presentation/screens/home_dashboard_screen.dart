@@ -10,6 +10,7 @@ import 'package:prj/core/widgets/service_card.dart';
 import 'package:prj/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:prj/features/booking_payment/presentation/controllers/booking_controller.dart';
 import 'package:prj/features/booking_payment/presentation/screens/booking_flow_screen.dart';
+import 'package:prj/features/booking_payment/presentation/screens/appointment_detail_screen.dart';
 import 'package:prj/features/vocational_training/presentation/controllers/course_controller.dart';
 import 'package:prj/features/vocational_training/presentation/screens/course_detail_screen.dart';
 import 'package:prj/features/home_service/presentation/controllers/home_controller.dart';
@@ -412,65 +413,78 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
               if (bookingCtrl.bookingHistory.isNotEmpty) ...[
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: isDark
-                            ? [const Color(0xFF0F2648), const Color(0xFF0E1A33)]
-                            : [const Color(0xFFEFF6FF), const Color(0xFFE0F2FE)],
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(16),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => AppointmentDetailScreen(
+                            booking: bookingCtrl.bookingHistory.first,
+                          ),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: isDark
+                              ? [const Color(0xFF0F2648), const Color(0xFF0E1A33)]
+                              : [const Color(0xFFEFF6FF), const Color(0xFFE0F2FE)],
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
                       ),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(12),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(Icons.event_available, color: Colors.white, size: 22),
                           ),
-                          child: const Icon(Icons.event_available, color: Colors.white, size: 22),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  const Text(
-                                    'Lịch hẹn sắp tới',
-                                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    '•  ${bookingCtrl.bookingHistory.first.ticketCode}',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: isDark ? AppColors.textMutedDark : AppColors.textMutedLight,
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Text(
+                                      'Lịch hẹn sắp tới',
+                                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary),
                                     ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 3),
-                              Text(
-                                '${bookingCtrl.bookingHistory.first.doctorTitle} ${bookingCtrl.bookingHistory.first.doctorName}',
-                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
-                              ),
-                              Text(
-                                '${bookingCtrl.bookingHistory.first.timeSlot} • ${Formatters.formatDate(bookingCtrl.bookingHistory.first.appointmentDate)}',
-                                style: TextStyle(
-                                  fontSize: 11.5,
-                                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      '•  ${bookingCtrl.bookingHistory.first.ticketCode}',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: isDark ? AppColors.textMutedDark : AppColors.textMutedLight,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                            ],
+                                const SizedBox(height: 3),
+                                Text(
+                                  '${bookingCtrl.bookingHistory.first.doctorTitle} ${bookingCtrl.bookingHistory.first.doctorName}',
+                                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                                ),
+                                Text(
+                                  '${bookingCtrl.bookingHistory.first.timeSlot} • ${Formatters.formatDate(bookingCtrl.bookingHistory.first.appointmentDate)}',
+                                  style: TextStyle(
+                                    fontSize: 11.5,
+                                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        const Icon(Icons.chevron_right, color: AppColors.primary),
-                      ],
+                          const Icon(Icons.chevron_right, color: AppColors.primary),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -525,6 +539,16 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                               context,
                               MaterialPageRoute(
                                 builder: (_) => ServiceDetailScreen(service: service),
+                              ),
+                            );
+                          },
+                          onBookNow: () {
+                            final booking = context.read<BookingController>();
+                            booking.startBooking(service: service);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const BookingFlowScreen(),
                               ),
                             );
                           },

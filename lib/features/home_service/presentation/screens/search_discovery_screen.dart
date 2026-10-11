@@ -559,6 +559,16 @@ class _SearchDiscoveryScreenState extends State<SearchDiscoveryScreen> {
                   ),
                 );
               },
+              onBookNow: () {
+                final booking = context.read<BookingController>();
+                booking.startBooking(service: service);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const BookingFlowScreen(),
+                  ),
+                );
+              },
             )),
       ],
     );

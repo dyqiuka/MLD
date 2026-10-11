@@ -185,9 +185,9 @@ export const AppointmentsTab: React.FC<AppointmentsTabProps> = ({
                     </td>
                     <td className="py-3.5 px-5">
                       <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold ${statusBadge.bg}`}
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold ${statusBadge?.bg || 'bg-slate-100 text-slate-700'}`}
                       >
-                        {statusBadge.label}
+                        {statusBadge?.label || 'Không xác định'}
                       </span>
                     </td>
                     <td className="py-3.5 px-5 text-right">

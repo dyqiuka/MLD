@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:prj/core/theme/app_colors.dart';
+import 'edit_profile_screen.dart';
 
 class AccountSettingsScreen extends StatefulWidget {
   const AccountSettingsScreen({super.key});
@@ -46,8 +47,11 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
               icon: Icons.person_outline,
               title: 'Thông tin cá nhân',
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Mở chỉnh sửa thông tin cá nhân...'), backgroundColor: AppColors.primary, duration: Duration(seconds: 1)),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const EditProfileScreen(),
+                  ),
                 );
               },
             ),
@@ -211,7 +215,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
               HapticFeedback.lightImpact();
               onChanged(newVal);
             },
-            activeColor: AppColors.primary,
+            activeThumbColor: AppColors.primary,
           ),
         ],
       ),

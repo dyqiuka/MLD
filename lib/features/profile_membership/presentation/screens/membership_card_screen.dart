@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:prj/core/theme/app_colors.dart';
+import 'loyalty_points_screen.dart';
 
 class MembershipCardScreen extends StatelessWidget {
   const MembershipCardScreen({super.key});
@@ -153,10 +154,10 @@ class MembershipCardScreen extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () {
                   HapticFeedback.lightImpact();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Đang chuyển đến trang Điểm tích lũy...'),
-                      backgroundColor: AppColors.primary,
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const LoyaltyPointsScreen(),
                     ),
                   );
                 },

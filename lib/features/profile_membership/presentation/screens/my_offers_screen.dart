@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:prj/core/theme/app_colors.dart';
+import 'package:prj/features/booking_payment/presentation/screens/booking_flow_screen.dart';
 
 class MyOffersScreen extends StatefulWidget {
   const MyOffersScreen({super.key});
@@ -125,10 +126,12 @@ class _MyOffersScreenState extends State<MyOffersScreen> {
               child: ElevatedButton(
                 onPressed: () {
                   HapticFeedback.lightImpact();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Đang chuyển đến đặt lịch dịch vụ...'), backgroundColor: AppColors.primary),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const BookingFlowScreen(initialStep: 0),
+                    ),
                   );
-                  Navigator.pop(context);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,

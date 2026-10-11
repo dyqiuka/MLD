@@ -4,115 +4,140 @@ import 'package:prj/features/home_service/domain/models/doctor_model.dart';
 import 'package:prj/features/home_service/domain/models/service_model.dart';
 import 'package:prj/features/booking_payment/domain/models/booking_model.dart';
 
-enum BookingStep { selectDoctor, selectDateTime, intakeInfo, payment }
-
 class BookingController extends ChangeNotifier {
   ServiceModel? _selectedService;
   DoctorModel? _selectedDoctor;
-  DateTime _selectedDate = DateTime.now().add(const Duration(days: 1));
-  String? _selectedTimeSlot;
+  String _selectedBranch = 'Chi nhánh mẫu 01 — Quận 3';
+  String _branchAddress = '123 Đường Mẫu, Phường Mẫu, TP. Hồ Chí Minh';
+  String _selectedSpecialist = 'Trần Minh Phương';
+  String _specialistTitle = 'Kỹ thuật viên massage';
+  bool _autoAssignSpecialist = false;
+  
+  DateTime _selectedDate = DateTime(2026, 10, 12);
+  String _selectedTimeSlot = '14:00–15:00';
+  
+  String _customerName = 'Nguyễn Minh Anh';
+  String _customerPhone = '0912 345 678';
+  String _customerEmail = 'minh.anh@example.com';
+  bool _isBookingForSelf = true;
+  
+  String _paymentChoice = 'deposit'; // 'deposit' or 'full'
   PaymentMethod _paymentMethod = PaymentMethod.vnpay;
-  String _symptoms = '';
-  String _patientName = 'Nguyễn Thanh Tùng';
-  String _patientPhone = '0988 123 456';
-  num _discount = 0;
-  String? _appliedPromoCode;
-
-  // Booked slots simulation for locking
-  final Set<String> _lockedSlots = {'08:30 - 09:00', '14:00 - 14:30'};
-
+  
   bool _isProcessingPayment = false;
   String? _paymentError;
   BookingModel? _lastConfirmedBooking;
   final List<BookingModel> _bookingHistory = [];
 
   // Getters
-  ServiceModel? get selectedService => _selectedService;
+  ServiceModel? get selectedService => _selectedService ?? AppConstants.sampleServices.first;
   DoctorModel? get selectedDoctor => _selectedDoctor;
+  String get selectedBranch => _selectedBranch;
+  String get branchAddress => _branchAddress;
+  String get selectedSpecialist => _selectedSpecialist;
+  String get specialistTitle => _specialistTitle;
+  bool get autoAssignSpecialist => _autoAssignSpecialist;
   DateTime get selectedDate => _selectedDate;
-  String? get selectedTimeSlot => _selectedTimeSlot;
+  String get selectedTimeSlot => _selectedTimeSlot;
+  String get customerName => _customerName;
+  String get customerPhone => _customerPhone;
+  String get customerEmail => _customerEmail;
+  bool get isBookingForSelf => _isBookingForSelf;
+  String get paymentChoice => _paymentChoice;
   PaymentMethod get paymentMethod => _paymentMethod;
-  String get symptoms => _symptoms;
-  String get patientName => _patientName;
-  String get patientPhone => _patientPhone;
-  num get discount => _discount;
-  String? get appliedPromoCode => _appliedPromoCode;
   bool get isProcessingPayment => _isProcessingPayment;
   String? get paymentError => _paymentError;
   BookingModel? get lastConfirmedBooking => _lastConfirmedBooking;
   List<BookingModel> get bookingHistory => _bookingHistory;
 
+  num get totalAmount => selectedService?.price ?? 450000;
+  num get depositAmount => 150000;
+  num get currentPayAmount => _paymentChoice == 'deposit' ? depositAmount : totalAmount;
+
   BookingController() {
-    // Seed initial completed booking
+    _selectedService = AppConstants.sampleServices.first;
+    // Seed initial completed appointment matching Frame C09 and C10 of Figma Group C
     _bookingHistory.add(
       BookingModel(
-        id: 'bk_seed_01',
-        ticketCode: 'MED-2026-9812',
+        id: 'bk_demo_01',
+        ticketCode: 'SPA-DEMO-000128',
         serviceId: 'srv_01',
-        serviceName: 'Gói Khám Tổng Quát Toàn Diện VIP',
+        serviceName: 'Massage thư giãn toàn thân',
         doctorId: 'doc_01',
-        doctorName: 'PGS. TS. BS. Nguyễn Văn Hùng',
-        doctorTitle: 'Trưởng khoa Tim Mạch & Nội Khoa',
-        hospital: 'Bệnh viện Đa khoa Quốc tế MLD Central',
-        appointmentDate: DateTime.now().add(const Duration(days: 2)),
-        timeSlot: '09:00 - 09:30',
-        patientName: 'Nguyễn Thanh Tùng',
-        patientPhone: '0988 123 456',
-        symptoms: 'Kiểm tra sức khỏe định kỳ hàng năm',
-        amount: 2850000,
+        doctorName: 'Trần Minh Phương',
+        doctorTitle: 'Kỹ thuật viên massage',
+        hospital: 'Chi nhánh mẫu 01 — Quận 3',
+        appointmentDate: DateTime(2026, 10, 12),
+        timeSlot: '14:00–15:00',
+        patientName: 'Nguyễn Minh Anh',
+        patientPhone: '0912 345 678',
+        symptoms: 'Thư giãn cơ thể, xua tan căng thẳng',
+        amount: 450000,
         paymentMethod: PaymentMethod.vnpay,
         paymentStatus: PaymentStatus.paid,
         bookingStatus: BookingStatus.confirmed,
-        createdAt: DateTime.now().subtract(const Duration(hours: 3)),
-        qrPayload: 'MLD-TICKET-MED-2026-9812-PATIENT-01',
+        createdAt: DateTime(2026, 10, 8),
+        qrPayload: 'SPA-DEMO-000128',
       ),
     );
   }
 
-  void startBooking({
-    required ServiceModel service,
-    DoctorModel? doctor,
-  }) {
-    _selectedService = service;
-    _selectedDoctor = doctor ?? AppConstants.sampleDoctors.first;
-    _selectedTimeSlot = null;
-    _symptoms = '';
-    _discount = 0;
-    _appliedPromoCode = null;
+  void startBooking({ServiceModel? service, DoctorModel? doctor}) {
+    if (service != null) {
+      _selectedService = service;
+    }
+    if (doctor != null) {
+      _selectedDoctor = doctor;
+      _selectedSpecialist = doctor.name;
+      _specialistTitle = doctor.title;
+    }
     _paymentError = null;
     notifyListeners();
   }
 
-  void setDoctor(DoctorModel doctor) {
-    _selectedDoctor = doctor;
-    _selectedTimeSlot = null;
+  void selectService(ServiceModel service) {
+    _selectedService = service;
     notifyListeners();
   }
 
-  void setDate(DateTime date) {
+  void selectBranch(String branch, String address) {
+    _selectedBranch = branch;
+    _branchAddress = address;
+    notifyListeners();
+  }
+
+  void selectSpecialist({required String name, required String title, bool isAuto = false}) {
+    _selectedSpecialist = name;
+    _specialistTitle = title;
+    _autoAssignSpecialist = isAuto;
+    notifyListeners();
+  }
+
+  void selectDate(DateTime date) {
     _selectedDate = date;
-    _selectedTimeSlot = null;
     notifyListeners();
   }
 
   void selectTimeSlot(String slot) {
-    if (_lockedSlots.contains(slot)) return; // Locked slot cannot be selected
     _selectedTimeSlot = slot;
     notifyListeners();
   }
 
-  bool isSlotLocked(String slot) {
-    return _lockedSlots.contains(slot);
-  }
-
-  void setIntakeInfo({
+  void setCustomerInfo({
     required String name,
     required String phone,
-    required String symptoms,
+    required String email,
+    required bool isSelf,
   }) {
-    _patientName = name;
-    _patientPhone = phone;
-    _symptoms = symptoms;
+    _customerName = name;
+    _customerPhone = phone;
+    _customerEmail = email;
+    _isBookingForSelf = isSelf;
+    notifyListeners();
+  }
+
+  void setPaymentChoice(String choice) {
+    _paymentChoice = choice;
     notifyListeners();
   }
 
@@ -121,20 +146,19 @@ class BookingController extends ChangeNotifier {
     notifyListeners();
   }
 
+  double _discount = 0.0;
+  double get discount => _discount;
+  double get finalAmount => (totalAmount - _discount).clamp(0.0, double.infinity);
+
   bool applyPromoCode(String code) {
     if (code.trim().toUpperCase() == 'MEDIVIP200') {
       _discount = 200000;
-      _appliedPromoCode = 'MEDIVIP200';
       notifyListeners();
       return true;
     }
+    _discount = 0;
+    notifyListeners();
     return false;
-  }
-
-  num get finalAmount {
-    final base = _selectedService?.price ?? _selectedDoctor?.consultationFee ?? 500000;
-    final total = base - _discount;
-    return total > 0 ? total : 0;
   }
 
   Future<bool> processPayment() async {
@@ -142,30 +166,29 @@ class BookingController extends ChangeNotifier {
     _paymentError = null;
     notifyListeners();
 
-    await Future.delayed(const Duration(milliseconds: 1600));
+    await Future.delayed(const Duration(milliseconds: 1200));
 
-    // Create confirmed booking
-    final ticketCode = 'MED-2026-${(1000 + DateTime.now().millisecond * 9)}';
+    final ticketCode = 'SPA-DEMO-${(100000 + DateTime.now().millisecond * 100).toString().substring(0, 6)}';
     final booking = BookingModel(
       id: 'bk_${DateTime.now().millisecondsSinceEpoch}',
       ticketCode: ticketCode,
-      serviceId: _selectedService?.id ?? 'srv_custom',
-      serviceName: _selectedService?.name ?? 'Khám Chuyên Khoa Theo Yêu Cầu',
-      doctorId: _selectedDoctor?.id ?? 'doc_01',
-      doctorName: _selectedDoctor?.name ?? 'Bác sĩ chuyên khoa',
-      doctorTitle: _selectedDoctor?.title ?? 'Bác sĩ',
-      hospital: _selectedDoctor?.hospital ?? 'Bệnh viện Đa khoa MLD Central',
+      serviceId: selectedService?.id ?? 'srv_01',
+      serviceName: selectedService?.name ?? 'Massage thư giãn toàn thân',
+      doctorId: 'doc_01',
+      doctorName: _selectedSpecialist,
+      doctorTitle: _specialistTitle,
+      hospital: _selectedBranch,
       appointmentDate: _selectedDate,
-      timeSlot: _selectedTimeSlot ?? '08:00 - 08:30',
-      patientName: _patientName,
-      patientPhone: _patientPhone,
-      symptoms: _symptoms.isEmpty ? 'Khám kiểm tra định kỳ' : _symptoms,
-      amount: finalAmount,
+      timeSlot: _selectedTimeSlot,
+      patientName: _customerName,
+      patientPhone: _customerPhone,
+      symptoms: 'Thư giãn trị liệu',
+      amount: totalAmount,
       paymentMethod: _paymentMethod,
       paymentStatus: PaymentStatus.paid,
       bookingStatus: BookingStatus.confirmed,
       createdAt: DateTime.now(),
-      qrPayload: 'MLD-TICKET-$ticketCode',
+      qrPayload: ticketCode,
     );
 
     _lastConfirmedBooking = booking;

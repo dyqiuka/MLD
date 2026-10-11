@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:prj/core/theme/app_colors.dart';
 import 'package:prj/core/widgets/empty_state.dart';
 import 'package:prj/core/widgets/service_card.dart';
+import 'package:prj/features/booking_payment/presentation/controllers/booking_controller.dart';
+import 'package:prj/features/booking_payment/presentation/screens/booking_flow_screen.dart';
 import 'package:prj/features/home_service/presentation/controllers/home_controller.dart';
 import 'search_discovery_screen.dart';
 import 'service_detail_screen.dart';
@@ -172,47 +174,45 @@ class _AllServicesScreenState extends State<AllServicesScreen> {
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: Container(
-                    height: 48,
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    decoration: BoxDecoration(
-                      color: isDark ? AppColors.surfaceDark : Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: isDark ? AppColors.borderDark : const Color(0xFFE5DDD5),
-                      ),
-                    ),
-                    alignment: Alignment.center,
-                    child: TextField(
-                      controller: _searchController,
-                      onChanged: (val) {
-                        home.setSearchQuery(val);
-                        setState(() {});
-                      },
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: 'Tìm dịch vụ chăm sóc...',
-                        hintStyle: TextStyle(
-                          fontSize: 13,
-                          color: isDark ? AppColors.textMutedDark : AppColors.textSecondaryLight,
+                  child: InkWell(
+                    onTap: _openSearchDiscovery,
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      height: 48,
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      decoration: BoxDecoration(
+                        color: isDark ? AppColors.surfaceDark : Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isDark ? AppColors.borderDark : const Color(0xFFE5DDD5),
                         ),
-                        border: InputBorder.none,
-                        isDense: true,
-                        contentPadding: EdgeInsets.zero,
-                        suffixIcon: _searchController.text.isNotEmpty
-                            ? GestureDetector(
-                                onTap: () {
-                                  _searchController.clear();
-                                  home.setSearchQuery('');
-                                  setState(() {});
-                                },
-                                child: const Icon(Icons.clear, size: 18, color: AppColors.textSecondary),
-                              )
-                            : null,
-                        suffixIconConstraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                      ),
+                      alignment: Alignment.centerLeft,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              _searchController.text.isNotEmpty
+                                  ? _searchController.text
+                                  : 'Tìm dịch vụ chăm sóc...',
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                color: _searchController.text.isNotEmpty
+                                    ? (isDark ? AppColors.textPrimaryDark : AppColors.textPrimary)
+                                    : (isDark ? AppColors.textMutedDark : AppColors.textSecondaryLight),
+                              ),
+                            ),
+                          ),
+                          if (_searchController.text.isNotEmpty)
+                            GestureDetector(
+                              onTap: () {
+                                _searchController.clear();
+                                home.setSearchQuery('');
+                                setState(() {});
+                              },
+                              child: const Icon(Icons.clear, size: 18, color: AppColors.textSecondary),
+                            ),
+                        ],
                       ),
                     ),
                   ),
@@ -373,6 +373,16 @@ class _AllServicesScreenState extends State<AllServicesScreen> {
                         context,
                         MaterialPageRoute(
                           builder: (_) => ServiceDetailScreen(service: service),
+                        ),
+                      );
+                    },
+                    onBookNow: () {
+                      final booking = context.read<BookingController>();
+                      booking.startBooking(service: service);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const BookingFlowScreen(),
                         ),
                       );
                     },
