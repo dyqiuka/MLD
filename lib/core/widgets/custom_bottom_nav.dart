@@ -36,37 +36,46 @@ class CustomBottomNav extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _NavItem(
-                icon: currentIndex == 0 ? Icons.home_rounded : Icons.home_outlined,
-                label: 'Trang chủ',
-                isSelected: currentIndex == 0,
-                onTap: () => onTap(0),
+              Expanded(
+                child: _NavItem(
+                  icon: currentIndex == 0 ? Icons.home_rounded : Icons.home_outlined,
+                  label: 'Trang chủ',
+                  isSelected: currentIndex == 0,
+                  onTap: () => onTap(0),
+                ),
               ),
-              _NavItem(
-                icon: currentIndex == 1 ? Icons.eco_rounded : Icons.eco_outlined,
-                label: 'Dịch vụ',
-                isSelected: currentIndex == 1,
-                onTap: () => onTap(1),
+              Expanded(
+                child: _NavItem(
+                  icon: currentIndex == 1 ? Icons.eco_rounded : Icons.eco_outlined,
+                  label: 'Dịch vụ',
+                  isSelected: currentIndex == 1,
+                  onTap: () => onTap(1),
+                ),
               ),
-              _NavItem(
-                icon: currentIndex == 2 ? Icons.calendar_month_rounded : Icons.calendar_today_outlined,
-                label: 'Đặt lịch',
-                isSelected: currentIndex == 2,
-                onTap: () => onTap(2),
+              Expanded(
+                child: _NavItem(
+                  icon: currentIndex == 2 ? Icons.calendar_month_rounded : Icons.calendar_today_outlined,
+                  label: 'Đặt lịch',
+                  isSelected: currentIndex == 2,
+                  onTap: () => onTap(2),
+                ),
               ),
-              _NavItem(
-                icon: currentIndex == 3 ? Icons.school_rounded : Icons.school_outlined,
-                label: 'Học viện',
-                isSelected: currentIndex == 3,
-                onTap: () => onTap(3),
+              Expanded(
+                child: _NavItem(
+                  icon: currentIndex == 3 ? Icons.school_rounded : Icons.school_outlined,
+                  label: 'Học viện',
+                  isSelected: currentIndex == 3,
+                  onTap: () => onTap(3),
+                ),
               ),
-              _NavItem(
-                icon: currentIndex == 4 ? Icons.person_rounded : Icons.person_outline_rounded,
-                label: 'Cá nhân',
-                isSelected: currentIndex == 4,
-                onTap: () => onTap(4),
+              Expanded(
+                child: _NavItem(
+                  icon: currentIndex == 4 ? Icons.person_rounded : Icons.person_outline_rounded,
+                  label: 'Cá nhân',
+                  isSelected: currentIndex == 4,
+                  onTap: () => onTap(4),
+                ),
               ),
             ],
           ),
@@ -100,7 +109,7 @@ class _NavItem extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.primaryLight.withValues(alpha: isDark ? 0.2 : 0.7) : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
@@ -114,12 +123,16 @@ class _NavItem extends StatelessWidget {
               color: isSelected ? selectedColor : unselectedColor,
             ),
             const SizedBox(height: 3),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10.5,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected ? selectedColor : unselectedColor,
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                label,
+                maxLines: 1,
+                style: TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  color: isSelected ? selectedColor : unselectedColor,
+                ),
               ),
             ),
           ],

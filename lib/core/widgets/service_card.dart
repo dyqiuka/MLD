@@ -71,6 +71,8 @@ class ServiceCard extends StatelessWidget {
                 children: [
                   Text(
                     service.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -101,6 +103,8 @@ class ServiceCard extends StatelessWidget {
                   const SizedBox(height: 12),
                   Text(
                     service.description.isNotEmpty ? service.description : 'Thả lỏng cơ thể trong không gian yên tĩnh.',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontSize: 13,
                       color: AppColors.textSecondary,

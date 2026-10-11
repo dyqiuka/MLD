@@ -7,12 +7,9 @@ import 'package:prj/core/utils/formatters.dart';
 import 'package:prj/core/widgets/course_card.dart';
 import 'package:prj/core/widgets/doctor_card.dart';
 import 'package:prj/core/widgets/service_card.dart';
-import 'package:prj/core/widgets/status_badge.dart';
-import 'package:prj/features/auth/domain/models/user_model.dart';
 import 'package:prj/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:prj/features/booking_payment/presentation/controllers/booking_controller.dart';
 import 'package:prj/features/booking_payment/presentation/screens/booking_flow_screen.dart';
-import 'package:prj/features/treatment_care/presentation/screens/telehealth_chat_screen.dart';
 import 'package:prj/features/vocational_training/presentation/controllers/course_controller.dart';
 import 'package:prj/features/vocational_training/presentation/screens/course_detail_screen.dart';
 import 'package:prj/features/home_service/presentation/controllers/home_controller.dart';
@@ -190,9 +187,12 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            'Chi nhánh mẫu 01 – Quận 3',
-                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textPrimary),
+                          Expanded(
+                            child: Text(
+                              'Chi nhánh mẫu 01 – Quận 3',
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textPrimary),
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                           Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.textSecondary),
                         ],
@@ -227,9 +227,12 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                       children: [
                         const Icon(Icons.search, color: AppColors.primary, size: 20),
                         const SizedBox(width: 12),
-                        Text(
-                          'Tìm dịch vụ, khóa học, chuyên viên...',
-                          style: TextStyle(fontSize: 14, color: AppColors.textSecondaryLight),
+                        Expanded(
+                          child: Text(
+                            'Tìm dịch vụ, khóa học, chuyên viên...',
+                            style: TextStyle(fontSize: 14, color: AppColors.textSecondaryLight),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ],
                     ),
@@ -598,19 +601,24 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.school, color: AppColors.gold, size: 20),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Học Viện Nghề Y Khoa',
-                          style: TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w800,
-                            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                    Expanded(
+                      child: Row(
+                        children: [
+                          const Icon(Icons.school, color: AppColors.gold, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Học Viện Nghề Y Khoa',
+                              style: TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w800,
+                                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                     TextButton(
                       onPressed: () => widget.onNavigateTab(3),

@@ -67,7 +67,7 @@ class ServiceDetailScreen extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        StatusBadge(label: service.category, status: BadgeStatus.primary),
+                        Flexible(child: StatusBadge(label: service.category, status: BadgeStatus.primary)),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
@@ -112,14 +112,15 @@ class ServiceDetailScreen extends StatelessWidget {
                   const SizedBox(height: 12),
 
                   // Metadata Pills
-                  Row(
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 8,
                     children: [
                       _MetadataPill(
                         icon: Icons.schedule,
                         text: '${service.durationMinutes} phút thực hiện',
                         isDark: isDark,
                       ),
-                      const SizedBox(width: 12),
                       _MetadataPill(
                         icon: Icons.verified_user_outlined,
                         text: 'Bảo hiểm y tế áp dụng',

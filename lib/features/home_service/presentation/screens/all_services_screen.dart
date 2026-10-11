@@ -148,9 +148,12 @@ class AllServicesScreen extends StatelessWidget {
                         child: const Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              'Phổ biến (minh họa)',
-                              style: TextStyle(fontSize: 13, color: AppColors.textPrimary),
+                            Expanded(
+                              child: Text(
+                                'Phổ biến (minh họa)',
+                                style: TextStyle(fontSize: 13, color: AppColors.textPrimary),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                             Icon(Icons.keyboard_arrow_down, size: 16, color: AppColors.textSecondary),
                           ],

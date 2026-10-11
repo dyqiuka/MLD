@@ -13,7 +13,6 @@ import 'features/home_service/presentation/screens/home_dashboard_screen.dart';
 import 'features/profile_membership/presentation/controllers/profile_controller.dart';
 import 'features/profile_membership/presentation/screens/profile_screen.dart';
 import 'features/treatment_care/presentation/controllers/treatment_controller.dart';
-import 'features/treatment_care/presentation/screens/medical_records_screen.dart';
 import 'features/vocational_training/presentation/controllers/course_controller.dart';
 import 'features/vocational_training/presentation/screens/academy_catalog_screen.dart';
 import 'features/booking_payment/presentation/screens/my_appointments_screen.dart';

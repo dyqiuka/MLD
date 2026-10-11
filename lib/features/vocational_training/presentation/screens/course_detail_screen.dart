@@ -108,12 +108,12 @@ class CourseDetailScreen extends StatelessWidget {
                   const SizedBox(height: 12),
 
                   // Metadata Row
-                  Row(
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
                       _MetaItem(icon: Icons.schedule, text: '${activeCourse.totalHours} giờ học', isDark: isDark),
-                      const SizedBox(width: 10),
                       _MetaItem(icon: Icons.play_lesson, text: '${activeCourse.totalLessons} bài giảng', isDark: isDark),
-                      const SizedBox(width: 10),
                       _MetaItem(icon: Icons.workspace_premium, text: 'Chứng nhận Viện', isDark: isDark),
                     ],
                   ),

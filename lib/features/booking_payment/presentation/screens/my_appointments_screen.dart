@@ -108,7 +108,13 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> {
                   child: const Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('12/10/2026 - 31/10/2026', style: TextStyle(fontSize: 13, color: AppColors.textPrimary, fontWeight: FontWeight.w500)),
+                      Expanded(
+                        child: Text(
+                          '12/10/2026 - 31/10/2026',
+                          style: TextStyle(fontSize: 13, color: AppColors.textPrimary, fontWeight: FontWeight.w500),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
                       Icon(Icons.keyboard_arrow_down, size: 18, color: AppColors.textSecondary),
                     ],
                   ),
@@ -126,7 +132,13 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> {
                   child: const Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Tất cả · Tất cả · Đã xác nhận', style: TextStyle(fontSize: 13, color: AppColors.textPrimary, fontWeight: FontWeight.w500)),
+                      Expanded(
+                        child: Text(
+                          'Tất cả · Tất cả · Đã xác nhận',
+                          style: TextStyle(fontSize: 13, color: AppColors.textPrimary, fontWeight: FontWeight.w500),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
                       Icon(Icons.keyboard_arrow_down, size: 18, color: AppColors.textSecondary),
                     ],
                   ),

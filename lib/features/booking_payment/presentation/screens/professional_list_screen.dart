@@ -132,7 +132,13 @@ class ProfessionalListScreen extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(value, style: const TextStyle(fontSize: 14, color: AppColors.textPrimary)),
+              Expanded(
+                child: Text(
+                  value,
+                  style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
               const Icon(Icons.keyboard_arrow_down, color: AppColors.textSecondary, size: 20),
             ],
           ),
