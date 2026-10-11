@@ -18,11 +18,11 @@ class HomeController extends ChangeNotifier {
 
   final List<String> categories = [
     'Tất cả',
-    'Khám Tổng Quát',
-    'Tim Mạch',
-    'Da Liễu',
-    'Nha Khoa',
-    'Nhi Khoa',
+    'Massage',
+    'Chăm sóc da',
+    'Chăm sóc cơ thể',
+    'Thư giãn',
+    'Gói liệu trình',
   ];
 
   HomeController() {

@@ -15,6 +15,7 @@ import 'package:prj/features/vocational_training/presentation/screens/course_det
 import 'package:prj/features/home_service/presentation/controllers/home_controller.dart';
 import 'package:prj/features/notifications/presentation/screens/notifications_screen.dart';
 import 'all_services_screen.dart';
+import 'search_discovery_screen.dart';
 import 'service_detail_screen.dart';
 
 class HomeDashboardScreen extends StatefulWidget {
@@ -211,7 +212,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => const AllServicesScreen(),
+                        builder: (_) => const SearchDiscoveryScreen(),
                       ),
                     );
                   },
@@ -361,38 +362,38 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     _QuickCategoryItem(
-                      icon: Icons.health_and_safety_outlined,
-                      label: 'Khám Tổng',
-                      color: const Color(0xFF0066F6),
+                      icon: Icons.spa_outlined,
+                      label: 'Massage',
+                      color: const Color(0xFF8B5E34),
                       onTap: () {
-                        home.selectCategory('Khám Tổng Quát');
+                        home.selectCategory('Massage');
                         Navigator.push(context, MaterialPageRoute(builder: (_) => const AllServicesScreen()));
                       },
                     ),
                     _QuickCategoryItem(
-                      icon: Icons.favorite_border_rounded,
-                      label: 'Tim Mạch',
-                      color: const Color(0xFFEF4444),
-                      onTap: () {
-                        home.selectCategory('Tim Mạch');
-                        Navigator.push(context, MaterialPageRoute(builder: (_) => const AllServicesScreen()));
-                      },
-                    ),
-                    _QuickCategoryItem(
-                      icon: Icons.auto_awesome,
-                      label: 'Da Liễu',
+                      icon: Icons.face_retouching_natural_outlined,
+                      label: 'Chăm sóc da',
                       color: const Color(0xFFEC4899),
                       onTap: () {
-                        home.selectCategory('Da Liễu');
+                        home.selectCategory('Chăm sóc da');
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const AllServicesScreen()));
+                      },
+                    ),
+                    _QuickCategoryItem(
+                      icon: Icons.self_improvement_outlined,
+                      label: 'Cơ thể',
+                      color: const Color(0xFFEF4444),
+                      onTap: () {
+                        home.selectCategory('Chăm sóc cơ thể');
                         Navigator.push(context, MaterialPageRoute(builder: (_) => const AllServicesScreen()));
                       },
                     ),
                     _QuickCategoryItem(
                       icon: Icons.sentiment_satisfied_alt,
-                      label: 'Nha Khoa',
+                      label: 'Thư giãn',
                       color: const Color(0xFF00BFA5),
                       onTap: () {
-                        home.selectCategory('Nha Khoa');
+                        home.selectCategory('Thư giãn');
                         Navigator.push(context, MaterialPageRoute(builder: (_) => const AllServicesScreen()));
                       },
                     ),
