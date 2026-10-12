@@ -197,9 +197,11 @@ class CoursePaymentScreen extends StatelessWidget {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text(
-                                'Tổng cộng',
-                                style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w800, color: Color(0xFF2C241E)),
+                              const Expanded(
+                                child: Text(
+                                  'Tổng cộng',
+                                  style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w800, color: Color(0xFF2C241E)),
+                                ),
                               ),
                               Text(
                                 '${(course.tuitionFee / 1000000).toStringAsFixed(0)}.000.000đ',
@@ -283,7 +285,9 @@ class CoursePaymentScreen extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: const TextStyle(fontSize: 13, color: Color(0xFF7A6E65))),
+        Expanded(
+          child: Text(label, style: const TextStyle(fontSize: 13, color: Color(0xFF7A6E65))),
+        ),
         Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF2C241E))),
       ],
     );

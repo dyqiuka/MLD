@@ -232,9 +232,11 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: const [
-                                Text(
-                                  '4 / 20 bài học đã hoàn thành',
-                                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5A4D41)),
+                                Expanded(
+                                  child: Text(
+                                    '4 / 20 bài học đã hoàn thành',
+                                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5A4D41)),
+                                  ),
                                 ),
                                 Text(
                                   '20%',

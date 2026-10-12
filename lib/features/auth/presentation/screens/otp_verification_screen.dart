@@ -1,9 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:prj/core/theme/app_colors.dart';
 import 'package:prj/core/widgets/custom_button.dart';
-import 'package:prj/features/auth/presentation/controllers/auth_controller.dart';
 import 'profile_setup_screen.dart';
 
 class OtpVerificationScreen extends StatefulWidget {

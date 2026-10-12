@@ -717,24 +717,26 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                         ),
                       ),
                       const SizedBox(width: 14),
-                      const Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Trần Minh Phương',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Kỹ thuật viên massage',
-                            style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
-                          ),
-                          SizedBox(height: 2),
-                          Text(
-                            'Hồ sơ minh họa',
-                            style: TextStyle(fontSize: 11.5, color: Color(0xFF8B5E34), fontWeight: FontWeight.w500),
-                          ),
-                        ],
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            Text(
+                              'Trần Minh Phương',
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              'Kỹ thuật viên massage',
+                              style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              'Hồ sơ minh họa',
+                              style: TextStyle(fontSize: 11.5, color: Color(0xFF8B5E34), fontWeight: FontWeight.w500),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -820,41 +822,42 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
 
         // Days row (T2: 12 to CN: 18)
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: List.generate(_weekDays.length, (i) {
             final isChosen = _selectedDayIndex == i;
             final item = _weekDays[i];
-            return GestureDetector(
-              onTap: () => setState(() => _selectedDayIndex = i),
-              child: Container(
-                width: 44,
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                decoration: BoxDecoration(
-                  color: isChosen ? AppColors.primary : (isDark ? AppColors.surfaceDark : Colors.white),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isChosen ? AppColors.primary : const Color(0xFFE5DDD5),
+            return Expanded(
+              child: GestureDetector(
+                onTap: () => setState(() => _selectedDayIndex = i),
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 2),
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  decoration: BoxDecoration(
+                    color: isChosen ? AppColors.primary : (isDark ? AppColors.surfaceDark : Colors.white),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: isChosen ? AppColors.primary : const Color(0xFFE5DDD5),
+                    ),
                   ),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      item['dow']!,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: isChosen ? Colors.white70 : AppColors.textSecondary,
+                  child: Column(
+                    children: [
+                      Text(
+                        item['dow']!,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: isChosen ? Colors.white70 : AppColors.textSecondary,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      item['day']!,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: isChosen ? Colors.white : AppColors.textPrimary,
+                      const SizedBox(height: 4),
+                      Text(
+                        item['day']!,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: isChosen ? Colors.white : AppColors.textPrimary,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             );
@@ -881,12 +884,12 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
         // Slots: Buổi sáng & Buổi chiều
         Text('Buổi sáng', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary)),
         const SizedBox(height: 8),
-        Row(
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
           children: [
             _SlotChip(label: '09:00', isSelected: booking.selectedTimeSlot == '09:00', onSelect: () => booking.selectTimeSlot('09:00')),
-            const SizedBox(width: 8),
             _SlotChip(label: '10:00', isSelected: booking.selectedTimeSlot == '10:00', onSelect: () => booking.selectTimeSlot('10:00')),
-            const SizedBox(width: 8),
             _SlotChip(label: '11:00', isSelected: booking.selectedTimeSlot == '11:00', onSelect: () => booking.selectTimeSlot('11:00')),
           ],
         ),
@@ -894,12 +897,12 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
 
         Text('Buổi chiều', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary)),
         const SizedBox(height: 8),
-        Row(
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
           children: [
             _SlotChip(label: '14:00–15:00', isSelected: booking.selectedTimeSlot == '14:00–15:00', onSelect: () => booking.selectTimeSlot('14:00–15:00')),
-            const SizedBox(width: 8),
             _SlotChip(label: '15:30', isSelected: booking.selectedTimeSlot == '15:30', onSelect: () => booking.selectTimeSlot('15:30')),
-            const SizedBox(width: 8),
             _SlotChip(label: '17:00', isSelected: booking.selectedTimeSlot == '17:00', onSelect: () => booking.selectTimeSlot('17:00')),
           ],
         ),
@@ -1086,7 +1089,9 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Thời lượng chăm sóc', style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                        const Expanded(
+                          child: Text('Thời lượng chăm sóc', style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                        ),
                         Text('${booking.selectedService?.durationMinutes ?? 60} phút', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
                       ],
                     ),
@@ -1193,7 +1198,9 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                       size: 20,
                     ),
                     const SizedBox(width: 10),
-                    const Text('Đặt cọc 150.000đ', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                    const Expanded(
+                      child: Text('Đặt cọc 150.000đ', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                    ),
                   ],
                 ),
               ),
@@ -1208,7 +1215,9 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                       size: 20,
                     ),
                     const SizedBox(width: 10),
-                    const Text('Thanh toán toàn bộ 450.000đ', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                    const Expanded(
+                      child: Text('Thanh toán toàn bộ 450.000đ', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                    ),
                   ],
                 ),
               ),
@@ -1233,7 +1242,9 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
             children: [
               Icon(Icons.check_circle, color: AppColors.primary, size: 20),
               SizedBox(width: 10),
-              Text('Chuyển khoản ngân hàng / QR', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+              Expanded(
+                child: Text('Chuyển khoản ngân hàng / QR', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+              ),
             ],
           ),
         ),
@@ -1335,9 +1346,21 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
       padding: const EdgeInsets.only(bottom: 6),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
-          Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+          Expanded(
+            flex: 2,
+            child: Text(label, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            flex: 3,
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+            ),
+          ),
         ],
       ),
     );

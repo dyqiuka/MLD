@@ -131,14 +131,13 @@ class _ClassScheduleScreenState extends State<ClassScheduleScreen> {
                       style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF8B5E34)),
                     ),
                     const SizedBox(height: 6),
-                    Row(
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 8,
                       children: const [
                         _LegendDot(color: Color(0xFF3B82F6), label: 'Trực tuyến'),
-                        SizedBox(width: 12),
                         _LegendDot(color: Color(0xFF10B981), label: 'Tại lớp'),
-                        SizedBox(width: 12),
                         _LegendDot(color: Color(0xFFD97706), label: 'Thực hành'),
-                        SizedBox(width: 12),
                         _LegendDot(color: Color(0xFF8B5E34), label: 'Kiểm tra'),
                       ],
                     ),
@@ -160,12 +159,14 @@ class _ClassScheduleScreenState extends State<ClassScheduleScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                'Thứ 6 · $_selectedDay/10/2026',
-                                style: const TextStyle(
-                                  fontSize: 14.5,
-                                  fontWeight: FontWeight.w800,
-                                  color: Color(0xFF2C241E),
+                              Expanded(
+                                child: Text(
+                                  'Thứ 6 · $_selectedDay/10/2026',
+                                  style: const TextStyle(
+                                    fontSize: 14.5,
+                                    fontWeight: FontWeight.w800,
+                                    color: Color(0xFF2C241E),
+                                  ),
                                 ),
                               ),
                               Container(

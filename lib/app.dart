@@ -16,7 +16,6 @@ import 'features/treatment_care/presentation/controllers/treatment_controller.da
 import 'features/vocational_training/presentation/controllers/course_controller.dart';
 import 'features/vocational_training/presentation/screens/academy_catalog_screen.dart';
 import 'features/booking_payment/presentation/screens/booking_flow_screen.dart';
-import 'features/booking_payment/presentation/screens/my_appointments_screen.dart';
 
 class MediLearnApp extends StatelessWidget {
   const MediLearnApp({super.key});

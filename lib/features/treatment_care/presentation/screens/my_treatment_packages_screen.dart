@@ -5,6 +5,7 @@ import 'package:prj/features/treatment_care/presentation/controllers/treatment_c
 import 'package:prj/features/treatment_care/domain/models/treatment_models.dart';
 import 'care_journal_screen.dart';
 import 'package:prj/features/treatment_care/presentation/screens/package_detail_screen.dart';
+import 'package:prj/features/treatment_care/presentation/screens/pre_service_intake_screen.dart';
 
 /// Frame D01 in Group D: Gói liệu trình của tôi
 class MyTreatmentPackagesScreen extends StatefulWidget {
@@ -198,6 +199,27 @@ class _MyTreatmentPackagesScreenState extends State<MyTreatmentPackagesScreen> {
                 ...filteredPackages.map((pkg) => _buildPackageCard(context, pkg, isDark)),
 
               const SizedBox(height: 16),
+              // Action button to view Pre-service Intake (D04)
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const PreServiceIntakeScreen()),
+                  );
+                },
+                icon: const Icon(Icons.assignment_outlined, color: Colors.white, size: 18),
+                label: const Text(
+                  'Phiếu thông tin trước dịch vụ',
+                  style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: Colors.white),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF8B5E34),
+                  minimumSize: const Size(double.infinity, 48),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 0,
+                ),
+              ),
+              const SizedBox(height: 10),
               // Action button to view Journal (D03)
               OutlinedButton.icon(
                 onPressed: () {

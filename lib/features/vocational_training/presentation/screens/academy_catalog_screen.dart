@@ -326,12 +326,14 @@ class _AcademyCatalogScreenState extends State<AcademyCatalogScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Chương trình đào tạo tiêu biểu',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF2C241E),
+                  const Expanded(
+                    child: Text(
+                      'Chương trình đào tạo tiêu biểu',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF2C241E),
+                      ),
                     ),
                   ),
                   TextButton(
