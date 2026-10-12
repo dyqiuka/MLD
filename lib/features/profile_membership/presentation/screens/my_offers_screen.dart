@@ -74,30 +74,33 @@ class _MyOffersScreenState extends State<MyOffersScreen> {
             const SizedBox(height: 16),
 
             // Filters
-            Row(
-              children: List.generate(_filters.length, (i) {
-                final isSelected = _selectedFilter == i;
-                return GestureDetector(
-                  onTap: () => setState(() => _selectedFilter = i),
-                  child: Container(
-                    margin: const EdgeInsets.only(right: 8),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: isSelected ? AppColors.primary : Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: isSelected ? AppColors.primary : AppColors.borderLight),
-                    ),
-                    child: Text(
-                      _filters[i],
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                        color: isSelected ? Colors.white : AppColors.textPrimary,
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: List.generate(_filters.length, (i) {
+                  final isSelected = _selectedFilter == i;
+                  return GestureDetector(
+                    onTap: () => setState(() => _selectedFilter = i),
+                    child: Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isSelected ? AppColors.primary : Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: isSelected ? AppColors.primary : AppColors.borderLight),
+                      ),
+                      child: Text(
+                        _filters[i],
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                          color: isSelected ? Colors.white : AppColors.textPrimary,
+                        ),
                       ),
                     ),
-                  ),
-                );
-              }),
+                  );
+                }),
+              ),
             ),
             const SizedBox(height: 24),
 
@@ -206,10 +209,17 @@ class _MyOffersScreenState extends State<MyOffersScreen> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(code, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.primary, letterSpacing: 1)),
-                      Text(codeNote, style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          codeNote,
+                          textAlign: TextAlign.right,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
+                        ),
+                      ),
                     ],
                   ),
                 ),

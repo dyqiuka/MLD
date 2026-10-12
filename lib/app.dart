@@ -103,38 +103,29 @@ class MainShellScreen extends StatefulWidget {
 }
 
 class _MainShellScreenState extends State<MainShellScreen> {
-  int _currentIndex = 0;
-
-  void _onTabSelect(int index) {
-    setState(() {
-      _currentIndex = index;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
+    final homeCtrl = context.watch<HomeController>();
     final screens = [
-      HomeDashboardScreen(onNavigateTab: _onTabSelect),
+      HomeDashboardScreen(onNavigateTab: (index) => homeCtrl.setTabIndex(index)),
       const AllServicesScreen(),
       const BookingFlowScreen(),
       const AcademyCatalogScreen(),
       ProfileScreen(
         onLogout: () {
-          setState(() {
-            _currentIndex = 0;
-          });
+          homeCtrl.setTabIndex(0);
         },
       ),
     ];
 
     return Scaffold(
       body: IndexedStack(
-        index: _currentIndex,
+        index: homeCtrl.selectedTabIndex,
         children: screens,
       ),
       bottomNavigationBar: CustomBottomNav(
-        currentIndex: _currentIndex,
-        onTap: _onTabSelect,
+        currentIndex: homeCtrl.selectedTabIndex,
+        onTap: (index) => homeCtrl.setTabIndex(index),
       ),
     );
   }

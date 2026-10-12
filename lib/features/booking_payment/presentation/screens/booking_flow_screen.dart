@@ -21,9 +21,11 @@ class BookingFlowScreen extends StatefulWidget {
 class _BookingFlowScreenState extends State<BookingFlowScreen> {
   late int _currentStep; // 0 to 7 (Frames C01 to C08)
   
-  // Step 1: Category filter
-  String _selectedCategory = 'Massage thư giãn';
+  // Step 1: Category & Search filter
+  String _selectedCategory = 'Tất cả';
+  String _serviceSearch = '';
   final List<String> _serviceCategories = [
+    'Tất cả',
     'Massage thư giãn',
     'Chăm sóc da',
     'Chăm sóc cơ thể',
@@ -31,21 +33,130 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
     'Gói liệu trình',
   ];
 
-  // Step 2: Branch
-  final String _selectedCity = 'Tất cả tỉnh / thành phố';
+  // Step 2: Branch & City
+  String _selectedCity = 'Tất cả tỉnh / thành phố';
   bool _isListView = true;
-
-  // Step 4: Datetime
-  int _selectedDayIndex = 0;
-  final List<Map<String, String>> _weekDays = [
-    {'dow': 'T2', 'day': '12'},
-    {'dow': 'T3', 'day': '13'},
-    {'dow': 'T4', 'day': '14'},
-    {'dow': 'T5', 'day': '15'},
-    {'dow': 'T6', 'day': '16'},
-    {'dow': 'T7', 'day': '17'},
-    {'dow': 'CN', 'day': '18'},
+  final List<String> _cities = [
+    'Tất cả tỉnh / thành phố',
+    'TP. Hồ Chí Minh',
+    'Hà Nội',
+    'Đà Nẵng',
+    'Hải Phòng',
+    'Cần Thơ',
+    'Bình Dương',
+    'Đồng Nai',
+    'Bà Rịa - Vũng Tàu',
   ];
+
+  final List<Map<String, dynamic>> _branches = [
+    {
+      'id': 'br_01',
+      'name': 'Chi nhánh mẫu 01 – Quận 3',
+      'city': 'TP. Hồ Chí Minh',
+      'address': '123 Đường Mẫu, Phường Võ Thị Sáu, Quận 3, TP. Hồ Chí Minh',
+      'hours': '09:00 - 20:00 • Cả tuần',
+      'image': 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=500',
+    },
+    {
+      'id': 'br_02',
+      'name': 'Chi nhánh mẫu 02 – Cầu Giấy',
+      'city': 'Hà Nội',
+      'address': '45 Đường Duy Tân, Dịch Vọng Hậu, Cầu Giấy, Hà Nội',
+      'hours': '09:00 - 20:00 • Cả tuần',
+      'image': 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=500',
+    },
+    {
+      'id': 'br_03',
+      'name': 'Chi nhánh mẫu 03 – Quận 1',
+      'city': 'TP. Hồ Chí Minh',
+      'address': '88 Lê Lợi, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh',
+      'hours': '08:30 - 21:00 • Cả tuần',
+      'image': 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=500',
+    },
+    {
+      'id': 'br_04',
+      'name': 'Chi nhánh mẫu 04 – Thảo Điền',
+      'city': 'TP. Hồ Chí Minh',
+      'address': '12 Quốc Hương, Thảo Điền, TP. Thủ Đức, TP. Hồ Chí Minh',
+      'hours': '09:00 - 20:30 • Cả tuần',
+      'image': 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=500',
+    },
+    {
+      'id': 'br_05',
+      'name': 'Chi nhánh mẫu 05 – Hoàn Kiếm',
+      'city': 'Hà Nội',
+      'address': '26 Tràng Tiền, Phường Tràng Tiền, Hoàn Kiếm, Hà Nội',
+      'hours': '09:00 - 21:00 • Cả tuần',
+      'image': 'https://images.unsplash.com/photo-1512290900672-1f55b9e59d47?w=500',
+    },
+    {
+      'id': 'br_06',
+      'name': 'Chi nhánh mẫu 06 – Hải Châu',
+      'city': 'Đà Nẵng',
+      'address': '150 Bạch Đằng, Phường Hải Châu 1, Hải Châu, Đà Nẵng',
+      'hours': '09:00 - 20:00 • Cả tuần',
+      'image': 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=500',
+    },
+    {
+      'id': 'br_07',
+      'name': 'Chi nhánh mẫu 07 – Ninh Kiều',
+      'city': 'Cần Thơ',
+      'address': '30 Đại lộ Hòa Bình, Ninh Kiều, Cần Thơ',
+      'hours': '08:30 - 20:30 • Cả tuần',
+      'image': 'https://images.unsplash.com/photo-1507652313519-d4e9174996dd?w=500',
+    },
+    {
+      'id': 'br_08',
+      'name': 'Chi nhánh mẫu 08 – Lê Chân',
+      'city': 'Hải Phòng',
+      'address': '105 Trần Phú, Lê Chân, Hải Phòng',
+      'hours': '09:00 - 20:00 • Cả tuần',
+      'image': 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=500',
+    },
+    {
+      'id': 'br_09',
+      'name': 'Chi nhánh mẫu 09 – Thủ Dầu Một',
+      'city': 'Bình Dương',
+      'address': '230 Đại lộ Bình Dương, Thủ Dầu Một, Bình Dương',
+      'hours': '08:30 - 20:30 • Cả tuần',
+      'image': 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=500',
+    },
+  ];
+
+  // Step 4: Datetime (Dynamic Month & Day selection)
+  late DateTime _activeMonth;
+  late DateTime _selectedDate;
+
+  List<DateTime> get _computedDays {
+    int start = 1;
+    if (_selectedDate.year == _activeMonth.year && _selectedDate.month == _activeMonth.month) {
+      if (_selectedDate.day > 5) {
+        start = (_selectedDate.day - 3).clamp(1, 22);
+      }
+    } else {
+      start = 10;
+    }
+    return List.generate(7, (i) => DateTime(_activeMonth.year, _activeMonth.month, start + i));
+  }
+
+  String _formatDow(int weekday) {
+    switch (weekday) {
+      case DateTime.monday:
+        return 'T2';
+      case DateTime.tuesday:
+        return 'T3';
+      case DateTime.wednesday:
+        return 'T4';
+      case DateTime.thursday:
+        return 'T5';
+      case DateTime.friday:
+        return 'T6';
+      case DateTime.saturday:
+        return 'T7';
+      default:
+        return 'CN';
+    }
+  }
 
   // Step 5: Customer controllers
   late final TextEditingController _nameCtrl;
@@ -57,6 +168,8 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
     super.initState();
     _currentStep = widget.initialStep;
     final booking = context.read<BookingController>();
+    _selectedDate = booking.selectedDate;
+    _activeMonth = DateTime(booking.selectedDate.year, booking.selectedDate.month, 1);
     _nameCtrl = TextEditingController(text: booking.customerName);
     _phoneCtrl = TextEditingController(text: booking.customerPhone);
     _emailCtrl = TextEditingController(text: booking.customerEmail);
@@ -68,6 +181,83 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
     _phoneCtrl.dispose();
     _emailCtrl.dispose();
     super.dispose();
+  }
+
+  void _showCityPickerModal(BuildContext context, bool isDark) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                margin: const EdgeInsets.symmetric(vertical: 10),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade400,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Chọn tỉnh / thành phố',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, size: 20),
+                      onPressed: () => Navigator.pop(ctx),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: _cities.length,
+                  itemBuilder: (ctx, idx) {
+                    final city = _cities[idx];
+                    final isSelected = _selectedCity == city;
+                    return ListTile(
+                      title: Text(
+                        city,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                          color: isSelected ? AppColors.primary : (isDark ? AppColors.textPrimaryDark : AppColors.textPrimary),
+                        ),
+                      ),
+                      trailing: isSelected
+                          ? const Icon(Icons.check_circle, color: AppColors.primary, size: 20)
+                          : null,
+                      onTap: () {
+                        setState(() {
+                          _selectedCity = city;
+                        });
+                        Navigator.pop(ctx);
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   void _nextStep() {
@@ -264,7 +454,15 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
   // FRAME C01: Chọn dịch vụ
   Widget _buildStep01SelectService(BuildContext context, BookingController booking, bool isDark) {
     final home = context.watch<HomeController>();
-    final services = home.services;
+    final filtered = home.services.where((srv) {
+      final matchesCat = _selectedCategory == 'Tất cả' ||
+          srv.category.toLowerCase().contains(_selectedCategory.toLowerCase()) ||
+          _selectedCategory.toLowerCase().contains(srv.category.toLowerCase());
+      final matchesQuery = _serviceSearch.isEmpty ||
+          srv.name.toLowerCase().contains(_serviceSearch.toLowerCase());
+      return matchesCat && matchesQuery;
+    }).toList();
+    final services = filtered.isEmpty ? home.services : filtered;
 
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
@@ -297,9 +495,16 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
             children: [
               const Icon(Icons.search, size: 20, color: AppColors.primary),
               const SizedBox(width: 10),
-              Text(
-                'Tìm dịch vụ chăm sóc...',
-                style: TextStyle(fontSize: 13, color: isDark ? AppColors.textMutedDark : AppColors.textSecondaryLight),
+              Expanded(
+                child: TextField(
+                  onChanged: (val) => setState(() => _serviceSearch = val),
+                  decoration: InputDecoration(
+                    hintText: 'Tìm dịch vụ chăm sóc...',
+                    hintStyle: TextStyle(fontSize: 13, color: isDark ? AppColors.textMutedDark : AppColors.textSecondaryLight),
+                    border: InputBorder.none,
+                    isDense: true,
+                  ),
+                ),
               ),
             ],
           ),
@@ -451,19 +656,29 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
           style: TextStyle(fontSize: 12, color: isDark ? AppColors.textMutedDark : AppColors.textSecondary),
         ),
         const SizedBox(height: 4),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.surfaceDark : Colors.white,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: const Color(0xFFE5DDD5)),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(_selectedCity, style: TextStyle(fontSize: 14, color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary)),
-              const Icon(Icons.keyboard_arrow_down, size: 18, color: AppColors.textSecondary),
-            ],
+        GestureDetector(
+          onTap: () => _showCityPickerModal(context, isDark),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.surfaceDark : Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFE5DDD5)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  _selectedCity,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+                  ),
+                ),
+                const Icon(Icons.keyboard_arrow_down, size: 20, color: AppColors.textSecondary),
+              ],
+            ),
           ),
         ),
         const SizedBox(height: 16),
@@ -514,51 +729,103 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
         ),
         const SizedBox(height: 20),
 
-        // Branch Card
-        Container(
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.surfaceDark : Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.primary, width: 1.5),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(14),
-                child: Row(
+        // Dynamic Branch Cards filtered by city
+        ...() {
+          final list = _selectedCity == 'Tất cả tỉnh / thành phố'
+              ? _branches
+              : _branches.where((b) => b['city'] == _selectedCity).toList();
+          final displayList = list.isEmpty ? _branches : list;
+
+          return displayList.map((branch) {
+            final isChosen = booking.selectedBranch == branch['name'];
+            return GestureDetector(
+              onTap: () {
+                booking.selectBranch(branch['name'], branch['address']);
+              },
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.surfaceDark : Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isChosen ? AppColors.primary : const Color(0xFFE5DDD5),
+                    width: isChosen ? 1.8 : 1.0,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: 22,
-                      height: 22,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(6),
+                    Padding(
+                      padding: const EdgeInsets.all(14),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: 22,
+                            height: 22,
+                            margin: const EdgeInsets.only(top: 2),
+                            decoration: BoxDecoration(
+                              color: isChosen ? AppColors.primary : Colors.transparent,
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: isChosen ? AppColors.primary : const Color(0xFFBCAAA4),
+                                width: 1.5,
+                              ),
+                            ),
+                            child: isChosen ? const Icon(Icons.check, size: 16, color: Colors.white) : null,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  branch['name'],
+                                  style: TextStyle(
+                                    fontSize: 14.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+                                  ),
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  branch['address'],
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: isDark ? AppColors.textMutedDark : AppColors.textSecondary,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  branch['hours'],
+                                  style: const TextStyle(
+                                    fontSize: 11.5,
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                      child: const Icon(Icons.check, size: 16, color: Colors.white),
                     ),
-                    const SizedBox(width: 10),
-                    const Expanded(
-                      child: Text(
-                        'Có thể đặt trong dữ liệu minh họa',
-                        style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                    ClipRRect(
+                      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(15)),
+                      child: Image.network(
+                        branch['image'],
+                        height: 140,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(height: 140, color: const Color(0xFFE5DDD5)),
                       ),
                     ),
                   ],
                 ),
               ),
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(15)),
-                child: Image.network(
-                  'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=500',
-                  height: 180,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ],
-          ),
-        ),
+            );
+          });
+        }(),
       ],
     );
   }
@@ -804,30 +1071,56 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
         ),
         const SizedBox(height: 18),
 
-        // Date Picker Strip: < Tháng 10, 2026 >
+        // Date Picker Strip: < Tháng MM, YYYY >
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.chevron_left, size: 20, color: AppColors.textPrimary),
-            const SizedBox(width: 8),
-            Text(
-              'Tháng 10, 2026',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary),
+            IconButton(
+              icon: const Icon(Icons.chevron_left, size: 24, color: AppColors.textPrimary),
+              onPressed: () {
+                setState(() {
+                  _activeMonth = DateTime(_activeMonth.year, _activeMonth.month - 1, 1);
+                  _selectedDate = DateTime(_activeMonth.year, _activeMonth.month, 10);
+                });
+                booking.selectDate(_selectedDate);
+              },
             ),
-            const SizedBox(width: 8),
-            const Icon(Icons.chevron_right, size: 20, color: AppColors.textPrimary),
+            const SizedBox(width: 4),
+            Text(
+              'Tháng ${_activeMonth.month}, ${_activeMonth.year}',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(width: 4),
+            IconButton(
+              icon: const Icon(Icons.chevron_right, size: 24, color: AppColors.textPrimary),
+              onPressed: () {
+                setState(() {
+                  _activeMonth = DateTime(_activeMonth.year, _activeMonth.month + 1, 1);
+                  _selectedDate = DateTime(_activeMonth.year, _activeMonth.month, 10);
+                });
+                booking.selectDate(_selectedDate);
+              },
+            ),
           ],
         ),
         const SizedBox(height: 12),
 
-        // Days row (T2: 12 to CN: 18)
+        // Days row dynamically rendered
         Row(
-          children: List.generate(_weekDays.length, (i) {
-            final isChosen = _selectedDayIndex == i;
-            final item = _weekDays[i];
+          children: _computedDays.map((dayDate) {
+            final isChosen = _selectedDate.year == dayDate.year &&
+                _selectedDate.month == dayDate.month &&
+                _selectedDate.day == dayDate.day;
             return Expanded(
               child: GestureDetector(
-                onTap: () => setState(() => _selectedDayIndex = i),
+                onTap: () {
+                  setState(() => _selectedDate = dayDate);
+                  booking.selectDate(dayDate);
+                },
                 child: Container(
                   margin: const EdgeInsets.symmetric(horizontal: 2),
                   padding: const EdgeInsets.symmetric(vertical: 8),
@@ -841,7 +1134,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                   child: Column(
                     children: [
                       Text(
-                        item['dow']!,
+                        _formatDow(dayDate.weekday),
                         style: TextStyle(
                           fontSize: 11,
                           color: isChosen ? Colors.white70 : AppColors.textSecondary,
@@ -849,7 +1142,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        item['day']!,
+                        dayDate.day.toString().padLeft(2, '0'),
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
@@ -861,20 +1154,44 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                 ),
               ),
             );
-          }),
+          }).toList(),
         ),
         const SizedBox(height: 14),
 
         Center(
-          child: Text(
-            'Mở lịch tháng',
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.primary),
+          child: InkWell(
+            onTap: () async {
+              final picked = await showDatePicker(
+                context: context,
+                initialDate: _selectedDate,
+                firstDate: DateTime(2025, 1, 1),
+                lastDate: DateTime(2028, 12, 31),
+                helpText: 'CHỌN NGÀY HẸN',
+                cancelText: 'HỦY',
+                confirmText: 'CHỌN',
+              );
+              if (picked != null) {
+                setState(() {
+                  _selectedDate = picked;
+                  _activeMonth = DateTime(picked.year, picked.month, 1);
+                });
+                booking.selectDate(picked);
+              }
+            },
+            borderRadius: BorderRadius.circular(8),
+            child: const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              child: Text(
+                'Mở lịch tháng',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.primary),
+              ),
+            ),
           ),
         ),
         const SizedBox(height: 8),
         Center(
           child: Text(
-            '12/10/2026–18/10/2026 · Lịch trống minh họa, không phải dữ liệu trực tiếp.',
+            '${_selectedDate.day.toString().padLeft(2, '0')}/${_selectedDate.month.toString().padLeft(2, '0')}/${_selectedDate.year} · Lịch hẹn minh họa.',
             style: TextStyle(fontSize: 11.5, color: isDark ? AppColors.textMutedDark : AppColors.textSecondary),
             textAlign: TextAlign.center,
           ),

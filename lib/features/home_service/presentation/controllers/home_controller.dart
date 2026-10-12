@@ -8,8 +8,10 @@ class HomeController extends ChangeNotifier {
   List<DoctorModel> _doctors = [];
   String _selectedCategory = 'Tất cả';
   String _searchQuery = '';
+  int _selectedTabIndex = 0;
   final bool _isLoading = false;
 
+  int get selectedTabIndex => _selectedTabIndex;
   List<ServiceModel> get services => _services;
   List<DoctorModel> get doctors => _doctors;
   String get selectedCategory => _selectedCategory;
@@ -32,6 +34,11 @@ class HomeController extends ChangeNotifier {
   void _loadData() {
     _services = List.from(AppConstants.sampleServices);
     _doctors = List.from(AppConstants.sampleDoctors);
+    notifyListeners();
+  }
+
+  void setTabIndex(int index) {
+    _selectedTabIndex = index;
     notifyListeners();
   }
 

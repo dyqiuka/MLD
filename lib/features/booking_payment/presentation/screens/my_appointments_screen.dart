@@ -112,38 +112,41 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> {
             // Filter Tabs: [ Sắp tới ] [ Đã hoàn thành ] [ Đã hủy ]
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                children: List.generate(_filters.length, (index) {
-                  final isSelected = _selectedFilterIndex == index;
-                  return GestureDetector(
-                    onTap: () => setState(() => _selectedFilterIndex = index),
-                    child: Container(
-                      margin: const EdgeInsets.only(right: 8),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? AppColors.primary
-                            : (isDark ? AppColors.surfaceDark : Colors.white),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: List.generate(_filters.length, (index) {
+                    final isSelected = _selectedFilterIndex == index;
+                    return GestureDetector(
+                      onTap: () => setState(() => _selectedFilterIndex = index),
+                      child: Container(
+                        margin: const EdgeInsets.only(right: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
                           color: isSelected
                               ? AppColors.primary
-                              : (isDark ? AppColors.borderDark : const Color(0xFFE5DDD5)),
+                              : (isDark ? AppColors.surfaceDark : Colors.white),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: isSelected
+                                ? AppColors.primary
+                                : (isDark ? AppColors.borderDark : const Color(0xFFE5DDD5)),
+                          ),
+                        ),
+                        child: Text(
+                          _filters[index],
+                          style: TextStyle(
+                            color: isSelected
+                                ? Colors.white
+                                : (isDark ? AppColors.textPrimaryDark : AppColors.textPrimary),
+                            fontSize: 13,
+                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                          ),
                         ),
                       ),
-                      child: Text(
-                        _filters[index],
-                        style: TextStyle(
-                          color: isSelected
-                              ? Colors.white
-                              : (isDark ? AppColors.textPrimaryDark : AppColors.textPrimary),
-                          fontSize: 13,
-                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  );
-                }),
+                    );
+                  }),
+                ),
               ),
             ),
             const SizedBox(height: 16),

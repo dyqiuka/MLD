@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:prj/core/theme/app_colors.dart';
+import 'package:prj/core/widgets/custom_bottom_nav.dart';
+import 'package:prj/features/home_service/presentation/controllers/home_controller.dart';
 import 'package:prj/features/vocational_training/presentation/controllers/course_controller.dart';
 import 'class_detail_screen.dart';
 import 'class_schedule_screen.dart';
@@ -335,6 +337,17 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> {
             ),
           ],
         ),
+      ),
+      bottomNavigationBar: CustomBottomNav(
+        currentIndex: 3,
+        onTap: (index) {
+          if (index == 3) {
+            Navigator.maybePop(context);
+          } else {
+            context.read<HomeController>().setTabIndex(index);
+            Navigator.of(context).popUntil((route) => route.isFirst);
+          }
+        },
       ),
     );
   }
