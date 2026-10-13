@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
-import { BookingStatus, UserRole } from '@prisma/client';
+import { BookingStatus, EnrollmentStatus, Prisma, UserRole } from '@prisma/client';
 import { database } from './data/database.js';
 import { prisma } from './lib/prisma.js';
 
@@ -52,6 +52,49 @@ const serializeUser = (user: any) => ({
   dob: user.dob ?? '',
   gender: user.gender ?? '',
   address: user.address ?? '',
+  preferredBranch: user.preferredBranch ?? '',
+  skinType: user.skinType ?? '',
+  healthNotes: user.healthNotes ?? '',
+  emergencyContactName: user.emergencyContactName ?? '',
+  emergencyContactPhone: user.emergencyContactPhone ?? '',
+});
+
+const serializeCourse = (course: any) => ({
+  id: course.id,
+  title: course.title,
+  category: course.category,
+  price: Number(course.price),
+  tuition: `${Number(course.price).toLocaleString('vi-VN')}đ`,
+  depositAmount: Number(course.deposit),
+  deposit: `${Number(course.deposit).toLocaleString('vi-VN')}đ`,
+  duration: course.duration,
+  instructor: course.instructor,
+  image: course.imageUrl ?? '',
+  description: course.description ?? '',
+});
+
+const serializeEnrollment = (enrollment: any) => ({
+  id: enrollment.id,
+  code: enrollment.code,
+  courseId: enrollment.courseId,
+  courseTitle: enrollment.course.title,
+  courseImage: enrollment.course.imageUrl ?? '',
+  studentName: enrollment.studentName,
+  phone: enrollment.phone,
+  email: enrollment.email ?? '',
+  totalAmount: Number(enrollment.totalAmount),
+  status: String(enrollment.status).toLowerCase(),
+  createdAt: enrollment.createdAt.toISOString(),
+});
+
+const serializeNotification = (notification: any) => ({
+  id: notification.id,
+  title: notification.title,
+  message: notification.message,
+  type: notification.type,
+  entityId: notification.entityId,
+  isRead: Boolean(notification.readAt),
+  createdAt: notification.createdAt.toISOString(),
 });
 
 const parseBookingDate = (date: string, timeSlot: string) => {
@@ -101,6 +144,33 @@ const serializeBooking = (booking: any) => {
 };
 
 const bookingInclude = { user: true, branch: true, service: true, specialist: true } as const;
+
+const findBookingConflict = async (
+  specialistId: string,
+  scheduledAt: Date,
+  durationMinutes: number,
+  excludedBookingId?: string,
+) => {
+  const dayStart = new Date(scheduledAt);
+  dayStart.setUTCHours(0, 0, 0, 0);
+  const dayEnd = new Date(dayStart);
+  dayEnd.setUTCDate(dayEnd.getUTCDate() + 1);
+  const candidates = await prisma.booking.findMany({
+    where: {
+      specialistId,
+      scheduledAt: { gte: dayStart, lt: dayEnd },
+      status: { in: [BookingStatus.PENDING, BookingStatus.CONFIRMED] },
+      ...(excludedBookingId ? { id: { not: excludedBookingId } } : {}),
+    },
+    include: { service: true },
+  });
+  const requestedEnd = scheduledAt.getTime() + durationMinutes * 60_000;
+  return candidates.find((candidate) => {
+    const existingStart = candidate.scheduledAt.getTime();
+    const existingEnd = existingStart + candidate.service.durationMinutes * 60_000;
+    return scheduledAt.getTime() < existingEnd && requestedEnd > existingStart;
+  });
+};
 
 // Request logger
 app.use((req, res, next) => {
@@ -210,17 +280,26 @@ app.get('/api/auth/me', async (_req: Request, res: Response) => {
 });
 
 app.put('/api/auth/profile', async (req: Request, res: Response) => {
-  const { name, email, address, dob, gender, avatar } = req.body;
+  const {
+    name, email, address, dob, gender, avatar, preferredBranch, skinType,
+    healthNotes, emergencyContactName, emergencyContactPhone,
+  } = req.body;
+  if (!name?.trim()) return res.status(400).json({ error: 'Họ và tên không được để trống' });
   try {
     const user = await prisma.user.update({
       where: { id: 'usr_001' },
       data: {
-        ...(name ? { name } : {}),
-        ...(email ? { email } : {}),
-        ...(address ? { address } : {}),
-        ...(dob ? { dob } : {}),
-        ...(gender ? { gender } : {}),
-        ...(avatar ? { avatarUrl: avatar } : {}),
+        name: name.trim(),
+        email: email?.trim() || null,
+        address: address?.trim() || null,
+        dob: dob?.trim() || null,
+        gender: gender || null,
+        avatarUrl: avatar || null,
+        preferredBranch: preferredBranch || null,
+        skinType: skinType || null,
+        healthNotes: healthNotes || null,
+        emergencyContactName: emergencyContactName || null,
+        emergencyContactPhone: emergencyContactPhone || null,
       },
     });
     res.json({ message: 'Cập nhật thông tin thành công', user: serializeUser(user) });
@@ -344,20 +423,42 @@ app.post('/api/bookings', async (req: Request, res: Response) => {
   }
 
   try {
-    const [service, branch, specialist] = await Promise.all([
+    const [service, branch, requestedSpecialist] = await Promise.all([
       prisma.service.findUnique({ where: { id: serviceId } }),
       prisma.branch.findUnique({ where: { id: branchId } }),
       doctorId ? prisma.specialist.findUnique({ where: { id: doctorId } }) : Promise.resolve(null),
     ]);
     if (!service || !branch) return res.status(404).json({ error: 'Dịch vụ hoặc chi nhánh không tồn tại' });
-    if (doctorId && !specialist) return res.status(404).json({ error: 'Chuyên viên không tồn tại' });
+    if (doctorId && !requestedSpecialist) return res.status(404).json({ error: 'Chuyên viên không tồn tại' });
+    if (scheduledAt.getTime() <= Date.now()) return res.status(400).json({ error: 'Vui lòng chọn thời gian trong tương lai' });
+    if (requestedSpecialist && requestedSpecialist.branchId !== branchId) {
+      return res.status(409).json({ error: 'Chuyên viên không làm việc tại chi nhánh đã chọn' });
+    }
 
-    const conflict = doctorId
-      ? await prisma.booking.findFirst({
-          where: { specialistId: doctorId, scheduledAt, status: { in: [BookingStatus.PENDING, BookingStatus.CONFIRMED] } },
-        })
-      : null;
-    if (conflict) return res.status(409).json({ error: 'Khung giờ này vừa được đặt. Vui lòng chọn giờ khác.' });
+    let assignedSpecialist = requestedSpecialist;
+    if (!assignedSpecialist) {
+      const available = await prisma.specialist.findMany({
+        where: { branchId, isActive: true, services: { some: { serviceId } } },
+      });
+      for (const candidate of available) {
+        const conflict = await findBookingConflict(candidate.id, scheduledAt, service.durationMinutes);
+        if (!conflict) {
+          assignedSpecialist = candidate;
+          break;
+        }
+      }
+      if (!assignedSpecialist) {
+        return res.status(409).json({ error: 'Tất cả chuyên viên đã kín lịch ở khung giờ này. Vui lòng chọn giờ khác.' });
+      }
+    }
+
+    const conflict = await findBookingConflict(assignedSpecialist.id, scheduledAt, service.durationMinutes);
+    if (conflict) {
+      return res.status(409).json({
+        error: `${assignedSpecialist.name} đã có lịch trùng thời gian này. Vui lòng chọn chuyên viên hoặc giờ khác.`,
+        code: 'BOOKING_CONFLICT',
+      });
+    }
 
     const user = await prisma.user.update({
       where: { id: 'usr_001' },
@@ -367,23 +468,38 @@ app.post('/api/bookings', async (req: Request, res: Response) => {
       },
     });
     const code = `SPA-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
-    const created = await prisma.booking.create({
-      data: {
-        code,
-        userId: user.id,
-        branchId,
-        serviceId,
-        specialistId: doctorId || null,
-        scheduledAt,
-        status: BookingStatus.CONFIRMED,
-        notes,
-        totalAmount: service.price,
-      },
-      include: bookingInclude,
+    const created = await prisma.$transaction(async (tx) => {
+      const booking = await tx.booking.create({
+        data: {
+          code,
+          userId: user.id,
+          branchId,
+          serviceId,
+          specialistId: assignedSpecialist!.id,
+          scheduledAt,
+          status: BookingStatus.CONFIRMED,
+          notes,
+          totalAmount: service.price,
+        },
+        include: bookingInclude,
+      });
+      await tx.notification.create({
+        data: {
+          userId: user.id,
+          type: 'booking',
+          entityId: booking.id,
+          title: 'Đặt lịch thành công',
+          message: `${service.name} lúc ${timeSlot}, ngày ${date} tại ${branch.name}.`,
+        },
+      });
+      return booking;
     });
     res.status(201).json({ message: 'Đặt lịch thành công', booking: serializeBooking(created) });
   } catch (error) {
     console.error('[API] POST /bookings failed', error);
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      return res.status(409).json({ error: 'Khung giờ này vừa được người khác đặt. Vui lòng chọn giờ khác.', code: 'BOOKING_CONFLICT' });
+    }
     res.status(500).json({ error: 'Không thể tạo lịch hẹn' });
   }
 });
@@ -393,26 +509,31 @@ app.patch('/api/bookings/:id/reschedule', async (req: Request, res: Response) =>
   const scheduledAt = parseBookingDate(date, timeSlot);
   if (!scheduledAt) return res.status(400).json({ error: 'Ngày hoặc giờ hẹn không hợp lệ' });
   try {
-    const current = await prisma.booking.findUnique({ where: { id: req.params.id } });
+    const current = await prisma.booking.findUnique({ where: { id: req.params.id }, include: { service: true } });
     if (!current) return res.status(404).json({ error: 'Không tìm thấy lịch hẹn' });
     if (current.status === BookingStatus.CANCELLED || current.status === BookingStatus.COMPLETED) {
       return res.status(409).json({ error: 'Không thể đổi lịch đã hủy hoặc đã hoàn thành' });
     }
+    if (scheduledAt.getTime() <= Date.now()) return res.status(400).json({ error: 'Vui lòng chọn thời gian trong tương lai' });
     const conflict = current.specialistId
-      ? await prisma.booking.findFirst({
-          where: {
-            id: { not: current.id }, specialistId: current.specialistId, scheduledAt,
-            status: { in: [BookingStatus.PENDING, BookingStatus.CONFIRMED] },
-          },
-        })
+      ? await findBookingConflict(current.specialistId, scheduledAt, current.service.durationMinutes, current.id)
       : null;
-    if (conflict) return res.status(409).json({ error: 'Khung giờ mới đã có lịch hẹn' });
-    const updated = await prisma.booking.update({
-      where: { id: current.id }, data: { scheduledAt }, include: bookingInclude,
+    if (conflict) return res.status(409).json({ error: 'Chuyên viên đã có lịch trùng thời gian mới. Vui lòng chọn giờ khác.', code: 'BOOKING_CONFLICT' });
+    const updated = await prisma.$transaction(async (tx) => {
+      const booking = await tx.booking.update({
+        where: { id: current.id }, data: { scheduledAt }, include: bookingInclude,
+      });
+      await tx.notification.create({
+        data: { userId: current.userId, type: 'booking', entityId: current.id, title: 'Lịch hẹn đã được thay đổi', message: `Lịch mới: ${timeSlot}, ngày ${date}.` },
+      });
+      return booking;
     });
     res.json({ message: 'Đổi lịch thành công', booking: serializeBooking(updated) });
   } catch (error) {
     console.error('[API] PATCH /bookings/:id/reschedule failed', error);
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      return res.status(409).json({ error: 'Khung giờ mới vừa được người khác đặt. Vui lòng chọn giờ khác.', code: 'BOOKING_CONFLICT' });
+    }
     res.status(500).json({ error: 'Không thể đổi lịch hẹn' });
   }
 });
@@ -422,10 +543,17 @@ app.patch('/api/bookings/:id/cancel', async (req: Request, res: Response) => {
     const current = await prisma.booking.findUnique({ where: { id: req.params.id } });
     if (!current) return res.status(404).json({ error: 'Không tìm thấy lịch hẹn' });
     if (current.status === BookingStatus.COMPLETED) return res.status(409).json({ error: 'Không thể hủy lịch đã hoàn thành' });
-    const updated = await prisma.booking.update({
-      where: { id: current.id },
-      data: { status: BookingStatus.CANCELLED, notes: req.body.reason || current.notes },
-      include: bookingInclude,
+    if (current.status === BookingStatus.CANCELLED) return res.status(409).json({ error: 'Lịch hẹn này đã được hủy trước đó' });
+    const updated = await prisma.$transaction(async (tx) => {
+      const booking = await tx.booking.update({
+        where: { id: current.id },
+        data: { status: BookingStatus.CANCELLED, notes: req.body.reason || current.notes },
+        include: bookingInclude,
+      });
+      await tx.notification.create({
+        data: { userId: current.userId, type: 'booking', entityId: current.id, title: 'Lịch hẹn đã hủy', message: `Mã lịch ${current.code} đã được hủy theo yêu cầu của bạn.` },
+      });
+      return booking;
     });
     res.json({ message: 'Hủy lịch thành công', booking: serializeBooking(updated) });
   } catch (error) {
@@ -437,16 +565,75 @@ app.patch('/api/bookings/:id/cancel', async (req: Request, res: Response) => {
 // ==========================================
 // 4. ACADEMY & COURSES ENDPOINTS (GROUP E)
 // ==========================================
-app.get('/api/courses', (req: Request, res: Response) => {
-  res.json({ total: database.courses.length, courses: database.courses });
+app.get('/api/courses', async (_req: Request, res: Response) => {
+  try {
+    const courses = await prisma.course.findMany({ where: { isActive: true }, orderBy: { createdAt: 'asc' } });
+    res.json({ total: courses.length, courses: courses.map(serializeCourse) });
+  } catch (error) {
+    console.error('[API] GET /courses failed', error);
+    res.status(500).json({ error: 'Không thể tải danh sách khóa học' });
+  }
 });
 
-app.get('/api/courses/:id', (req: Request, res: Response) => {
-  const course = database.courses.find((c) => c.id === req.params.id);
-  if (!course) {
-    return res.status(404).json({ error: 'Không tìm thấy khóa học' });
+app.get('/api/courses/:id', async (req: Request, res: Response) => {
+  try {
+    const course = await prisma.course.findUnique({ where: { id: req.params.id } });
+    if (!course) return res.status(404).json({ error: 'Không tìm thấy khóa học' });
+    res.json({ course: serializeCourse(course) });
+  } catch (error) {
+    console.error('[API] GET /courses/:id failed', error);
+    res.status(500).json({ error: 'Không thể tải khóa học' });
   }
-  res.json({ course });
+});
+
+app.get('/api/course-enrollments', async (_req: Request, res: Response) => {
+  try {
+    const enrollments = await prisma.courseEnrollment.findMany({
+      where: { userId: 'usr_001' }, include: { course: true }, orderBy: { createdAt: 'desc' },
+    });
+    res.json({ enrollments: enrollments.map(serializeEnrollment) });
+  } catch (error) {
+    console.error('[API] GET /course-enrollments failed', error);
+    res.status(500).json({ error: 'Không thể tải khóa học đã đăng ký' });
+  }
+});
+
+app.post('/api/course-enrollments', async (req: Request, res: Response) => {
+  const { courseId, studentName, phone, email } = req.body;
+  if (!courseId || !studentName?.trim() || !phone?.trim()) {
+    return res.status(400).json({ error: 'Vui lòng nhập đầy đủ họ tên và số điện thoại học viên' });
+  }
+  try {
+    const course = await prisma.course.findUnique({ where: { id: courseId } });
+    if (!course || !course.isActive) return res.status(404).json({ error: 'Khóa học không tồn tại hoặc đã ngừng tuyển sinh' });
+    const existing = await prisma.courseEnrollment.findUnique({
+      where: { userId_courseId: { userId: 'usr_001', courseId } }, include: { course: true },
+    });
+    if (existing && existing.status !== EnrollmentStatus.CANCELLED) {
+      return res.status(409).json({ error: 'Bạn đã đăng ký khóa học này', enrollment: serializeEnrollment(existing) });
+    }
+    const code = `MLD-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
+    const enrollment = await prisma.$transaction(async (tx) => {
+      const saved = existing
+        ? await tx.courseEnrollment.update({
+            where: { id: existing.id },
+            data: { code, studentName: studentName.trim(), phone: phone.trim(), email: email?.trim() || null, status: EnrollmentStatus.PENDING, totalAmount: course.price },
+            include: { course: true },
+          })
+        : await tx.courseEnrollment.create({
+            data: { code, userId: 'usr_001', courseId, studentName: studentName.trim(), phone: phone.trim(), email: email?.trim() || null, totalAmount: course.price },
+            include: { course: true },
+          });
+      await tx.notification.create({
+        data: { userId: 'usr_001', type: 'course', entityId: saved.id, title: 'Đăng ký khóa học thành công', message: `${course.title} đã được giữ chỗ. Bộ phận đào tạo sẽ liên hệ xác nhận học phí.` },
+      });
+      return saved;
+    });
+    res.status(201).json({ message: 'Đăng ký khóa học thành công', enrollment: serializeEnrollment(enrollment) });
+  } catch (error) {
+    console.error('[API] POST /course-enrollments failed', error);
+    res.status(500).json({ error: 'Không thể đăng ký khóa học' });
+  }
 });
 
 app.post('/api/courses/:id/quiz/submit', (req: Request, res: Response) => {
@@ -498,18 +685,45 @@ app.get('/api/records/:id', (req: Request, res: Response) => {
 // ==========================================
 // 6. MEMBERSHIP & VOUCHERS (GROUP F)
 // ==========================================
-app.get('/api/membership', (req: Request, res: Response) => {
-  const user = database.users[0];
-  res.json({
-    user: {
-      name: user.name,
-      phone: user.phone,
-      tier: user.tier,
-      points: user.points,
-      nextTierPoints: 5000,
-    },
-    vouchers: database.vouchers,
-  });
+app.get('/api/membership', async (_req: Request, res: Response) => {
+  try {
+    const user = await prisma.user.findUnique({ where: { id: 'usr_001' } });
+    if (!user) return res.status(404).json({ error: 'Không tìm thấy hội viên' });
+    res.json({ user: { ...serializeUser(user), nextTierPoints: 5000 }, vouchers: database.vouchers });
+  } catch (error) {
+    console.error('[API] GET /membership failed', error);
+    res.status(500).json({ error: 'Không thể tải thông tin hội viên' });
+  }
+});
+
+app.get('/api/notifications', async (_req: Request, res: Response) => {
+  try {
+    const notifications = await prisma.notification.findMany({ where: { userId: 'usr_001' }, orderBy: { createdAt: 'desc' }, take: 50 });
+    res.json({ unreadCount: notifications.filter((item) => !item.readAt).length, notifications: notifications.map(serializeNotification) });
+  } catch (error) {
+    console.error('[API] GET /notifications failed', error);
+    res.status(500).json({ error: 'Không thể tải thông báo' });
+  }
+});
+
+app.patch('/api/notifications/read-all', async (_req: Request, res: Response) => {
+  try {
+    await prisma.notification.updateMany({ where: { userId: 'usr_001', readAt: null }, data: { readAt: new Date() } });
+    res.json({ message: 'Đã đánh dấu tất cả thông báo là đã đọc' });
+  } catch (error) {
+    res.status(500).json({ error: 'Không thể cập nhật thông báo' });
+  }
+});
+
+app.patch('/api/notifications/:id/read', async (req: Request, res: Response) => {
+  try {
+    const notification = await prisma.notification.findFirst({ where: { id: req.params.id, userId: 'usr_001' } });
+    if (!notification) return res.status(404).json({ error: 'Không tìm thấy thông báo' });
+    const updated = await prisma.notification.update({ where: { id: notification.id }, data: { readAt: new Date() } });
+    res.json({ notification: serializeNotification(updated) });
+  } catch (error) {
+    res.status(500).json({ error: 'Không thể cập nhật thông báo' });
+  }
 });
 
 app.post('/api/vouchers/apply', (req: Request, res: Response) => {

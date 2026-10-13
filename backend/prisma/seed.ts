@@ -162,6 +162,33 @@ async function main() {
     }
   }
 
+  for (const course of database.courses) {
+    await prisma.course.upsert({
+      where: { id: course.id },
+      update: {
+        title: course.title,
+        category: course.category,
+        price: course.price,
+        deposit: Math.min(2_000_000, course.price),
+        duration: course.duration,
+        instructor: course.instructor,
+        imageUrl: course.image,
+        description: course.description,
+      },
+      create: {
+        id: course.id,
+        title: course.title,
+        category: course.category,
+        price: course.price,
+        deposit: Math.min(2_000_000, course.price),
+        duration: course.duration,
+        instructor: course.instructor,
+        imageUrl: course.image,
+        description: course.description,
+      },
+    });
+  }
+
   for (const booking of database.bookings) {
     await prisma.booking.upsert({
       where: { id: booking.id },
@@ -186,15 +213,16 @@ async function main() {
     });
   }
 
-  const [users, branches, services, specialists, bookings] = await Promise.all([
+  const [users, branches, services, specialists, bookings, courses] = await Promise.all([
     prisma.user.count(),
     prisma.branch.count(),
     prisma.service.count(),
     prisma.specialist.count(),
     prisma.booking.count(),
+    prisma.course.count(),
   ]);
 
-  console.log({ users, branches, services, specialists, bookings });
+  console.log({ users, branches, services, specialists, bookings, courses });
 }
 
 main()

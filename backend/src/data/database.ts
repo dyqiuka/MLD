@@ -10,6 +10,35 @@ export interface User {
   dob: string;
   gender: 'Nam' | 'Nữ';
   address: string;
+  preferredBranch?: string;
+  skinType?: string;
+  healthNotes?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+}
+
+export interface CourseEnrollment {
+  id: string;
+  code: string;
+  courseId: string;
+  courseTitle: string;
+  courseImage: string;
+  studentName: string;
+  phone: string;
+  email: string;
+  totalAmount: number;
+  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  createdAt: string;
+}
+
+export interface AppNotification {
+  id: string;
+  title: string;
+  message: string;
+  type: string;
+  entityId?: string;
+  isRead: boolean;
+  createdAt: string;
 }
 
 export interface Doctor {
