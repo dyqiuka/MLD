@@ -9,6 +9,10 @@ export default () => {
     root: "./src",
     base: "",
     plugins: [zaloMiniApp(), react()],
+    server: {
+      host: "0.0.0.0",
+      port: 3000,
+    },
     build: {
       assetsInlineLimit: 0,
     },

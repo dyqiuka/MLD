@@ -1,744 +1,621 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from 'react';
+import { Page, Box, Text } from 'zmp-ui';
+import { HeaderFigma } from '@/components/HeaderFigma';
+import { GroupBHome } from '@/components/GroupBHome';
+import { GroupCBooking } from '@/components/GroupCBooking';
+import { AppointmentsManager } from '@/components/AppointmentsManager';
+import { ETicketGroupC } from '@/components/ETicketGroupC';
+import { GroupEAcademy } from '@/components/GroupEAcademy';
+import { GroupDTreatment } from '@/components/GroupDTreatment';
+import { GroupDRecords } from '@/components/GroupDRecords';
+import { GroupFProfile } from '@/components/GroupFProfile';
+import { GroupAAuthModal } from '@/components/GroupAAuthModal';
+import { GroupBSearch } from '@/components/GroupBSearch';
+import { GroupWAdmin } from '@/components/GroupWAdmin';
+import { NotificationCenter } from '@/components/NotificationCenter';
 import {
-  Page,
-  Box,
-  Text,
-  Button,
-  Icon,
-  Modal,
-  Input,
-  Select,
-  useSnackbar,
-} from "zmp-ui";
+  ServiceDetailModal,
+  SpecialistDetailModal,
+  BranchDetailModal,
+  LocationDirectionsModal,
+  BranchDirectoryModal,
+  SpecialistDirectoryModal,
+} from '@/components/GroupBExtensions';
+import { apiClient } from '@/api/client';
+import {
+  database,
+  MedicalService,
+  Doctor,
+  Booking,
+  Course,
+  MedicalRecord,
+  User,
+  Voucher,
+  Branch,
+  AppNotification,
+} from '../../../../backend/src/data/database';
+import {
+  NavHomeIcon,
+  NavServiceIcon,
+  NavCalendarIcon,
+  NavAcademyIcon,
+  NavProfileIcon,
+  ArrowRightIcon,
+  FilterIcon,
+  SearchIcon,
+  CloseIcon,
+  ClockIcon,
+  HeartIcon,
+  ArrowLeftIcon,
+} from '@/components/Icons';
 
-// Mock data: Services & Courses
-interface ServiceItem {
-  id: string;
-  type: "service" | "course";
-  title: string;
-  category: string;
-  price: string;
-  duration: string;
-  rating: number;
-  reviewsCount: number;
-  instructor?: string;
-  badge?: string;
-  description: string;
-}
+function MasterHomePage() {
+  // App Mode: 'miniapp' (Zalo Mini App) | 'admin' (Figma Group W Web Admin)
+  const [appMode, setAppMode] = useState<'miniapp' | 'admin'>('miniapp');
 
-const mockServices: ServiceItem[] = [
-  {
-    id: "s1",
-    type: "service",
-    title: "Khám Tổng Quát & Tư Vấn Bác Sĩ",
-    category: "Y tế Gia Đình",
-    price: "450.000 đ",
-    duration: "45 phút",
-    rating: 4.9,
-    reviewsCount: 128,
-    badge: "Phổ biến",
-    description: "Thăm khám lâm sàng, đo chỉ số sinh tồn và tư vấn phác đồ điều trị cá nhân hóa.",
-  },
-  {
-    id: "s2",
-    type: "service",
-    title: "Chăm Sóc & Phục Hồi Chức Năng Tại Nhà",
-    category: "Phục Hồi Chức Năng",
-    price: "600.000 đ",
-    duration: "60 phút",
-    rating: 5.0,
-    reviewsCount: 94,
-    badge: "Yêu thích",
-    description: "Kỹ thuật viên y tế đến tận nhà hỗ trợ tập vận động, xoa bóp trị liệu chuyên sâu.",
-  },
-  {
-    id: "s3",
-    type: "service",
-    title: "Xét Nghiệm Tổng Quát Tận Nơi",
-    category: "Xét Nghiệm",
-    price: "850.000 đ",
-    duration: "30 phút",
-    rating: 4.8,
-    reviewsCount: 76,
-    description: "Lấy mẫu máu tại nhà, trả kết quả và hồ sơ bệnh án trực tuyến qua Zalo trong 4 giờ.",
-  },
-  {
-    id: "s4",
-    type: "service",
-    title: "Chăm Sóc Toàn Diện Người Cao Tuổi",
-    category: "Chăm Sóc Y Tế",
-    price: "950.000 đ",
-    duration: "Theo ngày",
-    rating: 4.9,
-    reviewsCount: 110,
-    badge: "Chuẩn Quốc Tế",
-    description: "Điều dưỡng viên túc trực hỗ trợ sinh hoạt, theo dõi thuốc và dinh dưỡng chuẩn y khoa.",
-  },
-];
+  // Navigation Tabs matching Figma Nhóm B & C: 'home' | 'services' | 'booking' | 'academy' | 'profile'
+  const [activeTab, setActiveTab] = useState<'home' | 'services' | 'booking' | 'academy' | 'profile'>('home');
 
-const mockCourses: ServiceItem[] = [
-  {
-    id: "c1",
-    type: "course",
-    title: "Kỹ Thuật Viên Phục Hồi Chức Năng Cơ Bản",
-    category: "Đào Tạo Nghề Y",
-    price: "4.800.000 đ",
-    duration: "3 tháng",
-    rating: 4.9,
-    reviewsCount: 85,
-    instructor: "ThS.BS Trần Mai",
-    badge: "Cấp Chứng Chỉ",
-    description: "Đào tạo thực hành bài bản, cấp chứng chỉ hành nghề chuẩn Bộ Y Tế, cam kết việc làm.",
-  },
-  {
-    id: "c2",
-    type: "course",
-    title: "Chăm Sóc Người Cao Tuổi Chuẩn Nhật Bản",
-    category: "Đào Tạo Kaigo",
-    price: "5.500.000 đ",
-    duration: "2 tháng",
-    rating: 5.0,
-    reviewsCount: 62,
-    instructor: "Chuyên gia Lê Hoàng",
-    badge: "Hot",
-    description: "Kỹ năng chăm sóc người già chuẩn điều dưỡng quốc tế, cơ hội làm việc tại Nhật Bản.",
-  },
-  {
-    id: "c3",
-    type: "course",
-    title: "Kỹ Thuật Xoa Bóp & Bấm Huyệt Trị Liệu",
-    category: "Y Học Cổ Truyền",
-    price: "3.200.000 đ",
-    duration: "6 tuần",
-    rating: 4.8,
-    reviewsCount: 140,
-    instructor: "BS.CKI Nguyễn Vũ",
-    description: "Nắm vững 12 đường kinh lạc, thủ thuật xoa bóp giải phóng chèn ép cơ xương khớp.",
-  },
-];
+  // Application Data States (synced with Backend API)
+  const [services, setServices] = useState<MedicalService[]>(database.services);
+  const [doctors, setDoctors] = useState<Doctor[]>(database.doctors);
+  const [branches, setBranches] = useState<Branch[]>(database.branches);
+  const [bookings, setBookings] = useState<Booking[]>(database.bookings);
+  const [courses, setCourses] = useState<Course[]>(database.courses);
+  const [records, setRecords] = useState<MedicalRecord[]>(database.medicalRecords);
+  const [user, setUser] = useState<User>(database.users[0]);
+  const [vouchers, setVouchers] = useState<Voucher[]>(database.vouchers);
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
-const doctors = [
-  {
-    name: "BS. CKI Trần Hoàng Mai",
-    role: "Trưởng khoa Phục Hồi Chức Năng",
-    exp: "15 năm kinh nghiệm",
-    hospital: "BV ĐH Y Dược",
-    avatar: "https://images.unsplash.com/photo-1594824813639-509930438d15?w=150&auto=format&fit=crop&q=80",
-  },
-  {
-    name: "ThS. BS Nguyễn Văn An",
-    role: "Chuyên gia Y Tế Gia Đình",
-    exp: "12 năm kinh nghiệm",
-    hospital: "BV Bạch Mai",
-    avatar: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=150&auto=format&fit=crop&q=80",
-  },
-];
+  // Active Flow Modals (Starts at Group A Onboarding on initial launch)
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [canCloseAuth, setCanCloseAuth] = useState(false);
+  const [viewingService, setViewingService] = useState<MedicalService | null>(null);
+  const [viewingDoctor, setViewingDoctor] = useState<Doctor | null>(null);
+  const [viewingBranch, setViewingBranch] = useState<Branch | null>(null);
+  const [directionsBranch, setDirectionsBranch] = useState<Branch | null>(null);
+  const [isBranchDirectoryOpen, setIsBranchDirectoryOpen] = useState(false);
+  const [isSpecialistDirectoryOpen, setIsSpecialistDirectoryOpen] = useState(false);
+  const [bookingService, setBookingService] = useState<MedicalService | null>(null);
+  const [bookingBranch, setBookingBranch] = useState<Branch | null>(null);
+  const [bookingDoctor, setBookingDoctor] = useState<Doctor | null>(null);
+  const [eTicketBooking, setETicketBooking] = useState<Booking | null>(null);
+  const [isEMRModalOpen, setIsEMRModalOpen] = useState(false);
+  const [isTreatmentOpen, setIsTreatmentOpen] = useState(false);
+  const [treatmentInitialTab, setTreatmentInitialTab] = useState<'packages' | 'journal' | 'care_guide' | 'support' | 'notifications'>('packages');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
-const branchList = [
-  "Chi nhánh Hà Nội - Cầu Giấy",
-  "Chi nhánh Hà Nội - Hoàn Kiếm",
-  "Chi nhánh TP.HCM - Quận 1",
-  "Chi nhánh TP.HCM - Bình Thạnh",
-  "Chi nhánh Đà Nẵng - Hải Châu",
-  "Chi nhánh Cần Thơ - Ninh Kiều",
-];
+  // Services Tab Filter State
+  const [servicesSearch, setServicesSearch] = useState('');
+  const [servicesCategory, setServicesCategory] = useState('all');
+  const [servicesSort, setServicesSort] = useState<'popular' | 'priceAsc' | 'priceDesc'>('popular');
 
-function HomePage() {
-  const { openSnackbar } = useSnackbar();
+  // Fetch real data from Backend on mount
+  useEffect(() => {
+    async function loadBackendData() {
+      const [srvData, docData, brData, crsData, recData, membData, bkData, notifData] = await Promise.all([
+        apiClient.getServices(),
+        apiClient.getDoctors(),
+        apiClient.getBranches(),
+        apiClient.getCourses(),
+        apiClient.getMedicalRecords(),
+        apiClient.getMembership(),
+        apiClient.getBookings(),
+        apiClient.getNotifications(),
+      ]);
 
-  // Navigation tab: 'home' | 'services' | 'courses' | 'bookings'
-  const [activeTab, setActiveTab] = useState<"home" | "services" | "courses" | "bookings">("home");
-  
-  // Filter category on home
-  const [filterType, setFilterType] = useState<"all" | "service" | "course">("all");
-
-  // Booking Modal State
-  const [isBookingOpen, setIsBookingOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<ServiceItem | null>(null);
-  const [customerName, setCustomerName] = useState("Nguyễn Văn A");
-  const [customerPhone, setCustomerPhone] = useState("0912 345 678");
-  const [bookingDate, setBookingDate] = useState("2026-10-15");
-  const [selectedBranch, setSelectedBranch] = useState(branchList[0]);
-  const [bookingNotes, setBookingNotes] = useState("");
-
-  // Stored Bookings
-  const [myBookings, setMyBookings] = useState([
-    {
-      id: "BK-8842",
-      title: "Khám Tổng Quát & Tư Vấn Bác Sĩ",
-      date: "14:30 - 15/10/2026",
-      branch: "Chi nhánh Hà Nội - Cầu Giấy",
-      status: "Đã xác nhận",
-      price: "450.000 đ",
-    },
-  ]);
-
-  const handleOpenBooking = (item: ServiceItem) => {
-    setSelectedItem(item);
-    setIsBookingOpen(true);
-  };
-
-  const handleConfirmBooking = () => {
-    if (!customerName.trim() || !customerPhone.trim()) {
-      openSnackbar({
-        text: "Vui lòng nhập đầy đủ tên và số điện thoại!",
-        type: "error",
-      });
-      return;
+      if (srvData?.services) setServices(srvData.services);
+      if (docData?.doctors) setDoctors(docData.doctors);
+      if (brData?.branches) setBranches(brData.branches);
+      if (crsData?.courses) setCourses(crsData.courses);
+      if (recData?.records) setRecords(recData.records);
+      if (membData?.vouchers) setVouchers(membData.vouchers);
+      if (membData?.user) setUser((prev) => ({ ...prev, ...membData.user }));
+      if (bkData?.bookings) setBookings(bkData.bookings);
+      if (notifData?.notifications) setNotifications(notifData.notifications);
     }
 
-    const newBooking = {
-      id: `BK-${Math.floor(1000 + Math.random() * 9000)}`,
-      title: selectedItem ? selectedItem.title : "Khám sức khỏe",
-      date: `09:00 - ${bookingDate}`,
-      branch: selectedBranch,
-      status: "Đã xác nhận",
-      price: selectedItem ? selectedItem.price : "450.000 đ",
-    };
+    loadBackendData();
+  }, []);
 
-    setMyBookings([newBooking, ...myBookings]);
-    setIsBookingOpen(false);
-
-    openSnackbar({
-      text: "Đặt lịch thành công! Nhân viên MLD sẽ gọi xác nhận qua Zalo.",
-      type: "success",
-      duration: 3500,
-    });
+  const handleBookingSuccess = (newBooking: Booking) => {
+    setBookingService(null);
+    setBookingBranch(null);
+    setBookingDoctor(null);
+    setViewingService(null);
+    setBookings((prev) => [newBooking, ...prev]);
+    setETicketBooking(newBooking);
+    apiClient.getNotifications().then((response) => response?.notifications && setNotifications(response.notifications));
   };
 
-  const filteredItems = [
-    ...(filterType === "all" || filterType === "service" ? mockServices : []),
-    ...(filterType === "all" || filterType === "course" ? mockCourses : []),
-  ];
+  // Find latest upcoming confirmed booking
+  const upcomingBooking = bookings.find((b) => b.status === 'confirmed') || null;
+
+  const openBooking = (service?: MedicalService | null, branch?: Branch | null, doctor?: Doctor | null) => {
+    setBookingBranch(branch || null);
+    setBookingDoctor(doctor || null);
+    setBookingService(service || services[0] || null);
+  };
+
+  // Filtered services for Tab 'services'
+  const catalogServices = services
+    .filter((s) => {
+      const matchSearch =
+        s.title.toLowerCase().includes(servicesSearch.toLowerCase()) ||
+        s.description.toLowerCase().includes(servicesSearch.toLowerCase());
+      const matchCat =
+        servicesCategory === 'all' || s.category.toLowerCase().includes(servicesCategory.toLowerCase());
+      return matchSearch && matchCat;
+    })
+    .sort((a, b) => {
+      if (servicesSort === 'priceAsc') return a.price - b.price;
+      if (servicesSort === 'priceDesc') return b.price - a.price;
+      return b.rating - a.rating;
+    });
+
+  // IF ADMIN MODE: Render Group W Web Admin Dashboard
+  if (appMode === 'admin') {
+    return <GroupWAdmin onBackToMiniApp={() => setAppMode('miniapp')} />;
+  }
 
   return (
-    <Page className="bg-slate-50 text-slate-800 min-h-screen pb-20 select-none">
-      {/* 1. TOP HEADER */}
-      <Box className="gradient-header text-white px-4 pt-6 pb-6 rounded-b-3xl shadow-md">
-        <Box className="flex items-center justify-between mb-4">
-          <Box className="flex items-center space-x-3">
-            <Box className="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center font-bold text-white text-lg border border-white/30">
-              MLD
-            </Box>
-            <Box>
-              <Box className="flex items-center space-x-1">
-                <Text className="font-bold text-base text-white tracking-wide">
-                  MLD VIỆT NAM
-                </Text>
-                <Icon icon="zi-check-circle-solid" className="text-emerald-300 text-sm" />
-              </Box>
-              <Text className="text-xs text-sky-100 font-light">
-                Y Tế Chuyên Sâu & Đào Tạo Nghề
-              </Text>
-            </Box>
-          </Box>
-          <Box className="flex items-center space-x-2">
+    <div className="min-h-screen bg-[#EDE7DE] flex justify-center items-start sm:items-center py-0 sm:py-4 text-stone-800 select-none">
+      <div className="mini-app-shell w-full max-w-[390px] sm:h-[844px] sm:max-h-[96vh] bg-[#FAF6F0] sm:rounded-[36px] shadow-2xl relative overflow-hidden flex flex-col border sm:border-[#DCCFC0]">
+        {/* Scrollable Body Content */}
+        <div className="flex-1 overflow-y-auto pb-28 overscroll-contain">
+        {/* TAB 1: TRANG CHỦ (FIGMA GROUP B HOME) */}
+        {activeTab === 'home' && (
+          <GroupBHome
+            services={services}
+            doctors={doctors}
+            branches={branches}
+            upcomingBooking={upcomingBooking}
+            onSelectService={(service) => openBooking(service)}
+            onViewServiceDetail={(s) => setViewingService(s)}
+            onSelectDoctor={(doc) => setViewingDoctor(doc)}
+            onSelectBranch={(br) => setViewingBranch(br)}
+            onOpenDirections={(br) => setDirectionsBranch(br)}
+            onNavigateTab={(tabKey) => setActiveTab(tabKey as any)}
+            onOpenSearch={() => setIsSearchOpen(true)}
+            onOpenNotifications={() => {
+              apiClient.getNotifications().then((response) => {
+                if (response?.notifications) setNotifications(response.notifications);
+                setIsNotificationsOpen(true);
+              });
+            }}
+            unreadNotifications={notifications.filter((item) => !item.isRead).length}
+            onOpenBranches={() => setIsBranchDirectoryOpen(true)}
+            onOpenSpecialists={() => setIsSpecialistDirectoryOpen(true)}
+          />
+        )}
+
+        {/* TAB 2: DỊCH VỤ CHĂM SÓC (FIGMA GROUP B SCREEN 2) */}
+        {activeTab === 'services' && (
+          <Box className="space-y-3 px-3 pt-3 pb-20">
+            <div>
+              <h1 className="text-[18px] font-bold text-[#6F452C] leading-tight">Dịch vụ chăm sóc</h1>
+              <p className="text-[10px] text-[#7A685D] mt-1">Khám phá dịch vụ phù hợp với nhu cầu của bạn.</p>
+            </div>
+
+            {/* Search */}
             <button
-              onClick={() => {
-                openSnackbar({
-                  text: "Tổng đài hỗ trợ 24/7: 1900 8866 (Miễn phí qua Zalo)",
-                  type: "info",
-                });
-              }}
-              className="px-3 py-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-xs text-white font-medium flex items-center space-x-1 active:scale-95 transition"
+              type="button"
+              onClick={() => setIsSearchOpen(true)}
+              className="w-full flex items-center gap-2 text-left"
             >
-              <Icon icon="zi-call" className="text-xs" />
-              <span>1900 8866</span>
+              <span className="w-10 h-10 rounded-[7px] bg-white border border-[#DED2C5] flex items-center justify-center shrink-0">
+                <SearchIcon size={17} color="#A65317" />
+              </span>
+              <span className="h-10 flex-1 rounded-[7px] bg-white border border-[#DED2C5] px-3 flex items-center text-[10px] text-[#8A7D74]">
+                Tìm dịch vụ chăm sóc...
+              </span>
             </button>
-          </Box>
-        </Box>
 
-        {/* User Card Welcome */}
-        <Box className="bg-white/15 backdrop-blur-md rounded-2xl p-3 border border-white/20 flex items-center justify-between">
-          <Box className="flex items-center space-x-2.5">
-            <Box className="w-9 h-9 rounded-full bg-sky-200 text-sky-900 font-bold flex items-center justify-center text-sm shadow">
-              KH
-            </Box>
-            <Box>
-              <Text className="text-xs text-sky-100">Khách hàng thành viên</Text>
-              <Text className="text-sm font-semibold text-white">
-                Xin chào, {customerName} 👋
-              </Text>
-            </Box>
-          </Box>
-          <Box className="px-2.5 py-1 rounded-lg bg-emerald-500/80 text-white text-[11px] font-semibold flex items-center space-x-1">
-            <span>Zalo Mini App</span>
-          </Box>
-        </Box>
-      </Box>
-
-      {/* 2. BODY CONTENT BASED ON ACTIVE TAB */}
-      <Box className="px-4 -mt-3">
-        {activeTab === "home" && (
-          <Box className="space-y-4">
-            {/* Quick Action Grid */}
-            <Box className="bg-white rounded-2xl p-4 card-shadow grid grid-cols-4 gap-2 text-center border border-slate-100">
-              <Box
-                onClick={() => {
-                  setActiveTab("services");
-                }}
-                className="flex flex-col items-center p-2 rounded-xl active:bg-sky-50 transition cursor-pointer"
-              >
-                <Box className="w-11 h-11 rounded-2xl bg-sky-100 text-sky-700 flex items-center justify-center text-xl mb-1 shadow-sm">
-                  🩺
-                </Box>
-                <Text className="text-[11px] font-medium text-slate-700">Khám Bệnh</Text>
-              </Box>
-
-              <Box
-                onClick={() => {
-                  setActiveTab("courses");
-                }}
-                className="flex flex-col items-center p-2 rounded-xl active:bg-emerald-50 transition cursor-pointer"
-              >
-                <Box className="w-11 h-11 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-xl mb-1 shadow-sm">
-                  🎓
-                </Box>
-                <Text className="text-[11px] font-medium text-slate-700">Khóa Học</Text>
-              </Box>
-
-              <Box
-                onClick={() => {
-                  setActiveTab("bookings");
-                }}
-                className="flex flex-col items-center p-2 rounded-xl active:bg-amber-50 transition cursor-pointer"
-              >
-                <Box className="w-11 h-11 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center text-xl mb-1 shadow-sm">
-                  📅
-                </Box>
-                <Text className="text-[11px] font-medium text-slate-700">Lịch Hẹn</Text>
-              </Box>
-
-              <Box
-                onClick={() => {
-                  openSnackbar({
-                    text: "Đang kết nối đến Bác sĩ tư vấn qua Zalo OA...",
-                    type: "info",
-                  });
-                }}
-                className="flex flex-col items-center p-2 rounded-xl active:bg-indigo-50 transition cursor-pointer"
-              >
-                <Box className="w-11 h-11 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-xl mb-1 shadow-sm">
-                  💬
-                </Box>
-                <Text className="text-[11px] font-medium text-slate-700">Tư Vấn</Text>
-              </Box>
-            </Box>
-
-            {/* Featured Banner */}
-            <Box className="gradient-banner rounded-2xl p-4 text-white shadow-sm relative overflow-hidden">
-              <Box className="relative z-10 space-y-1">
-                <Box className="inline-block px-2 py-0.5 rounded-full bg-white/20 text-[10px] font-semibold text-white uppercase tracking-wider mb-1">
-                  Ưu đãi độc quyền Zalo
-                </Box>
-                <Text className="text-base font-bold leading-snug">
-                  Gói Chăm Sóc Sức Khỏe Gia Đình 2026
-                </Text>
-                <Text className="text-xs text-sky-100 font-light">
-                  Giảm 30% khi đặt lịch trực tiếp trên Zalo Mini App
-                </Text>
-                <Box className="pt-2">
-                  <button
-                    onClick={() => handleOpenBooking(mockServices[0])}
-                    className="px-4 py-1.5 rounded-xl bg-white text-sky-700 text-xs font-bold shadow active:scale-95 transition"
-                  >
-                    Đặt Lịch Ngay
-                  </button>
-                </Box>
-              </Box>
-            </Box>
-
-            {/* Filter Pills */}
-            <Box className="flex items-center space-x-2 pt-1 overflow-x-auto no-scrollbar">
-              <button
-                onClick={() => setFilterType("all")}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition ${
-                  filterType === "all"
-                    ? "bg-sky-600 text-white shadow-sm"
-                    : "bg-white text-slate-600 border border-slate-200"
-                }`}
-              >
-                Tất Cả ({mockServices.length + mockCourses.length})
-              </button>
-              <button
-                onClick={() => setFilterType("service")}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition ${
-                  filterType === "service"
-                    ? "bg-sky-600 text-white shadow-sm"
-                    : "bg-white text-slate-600 border border-slate-200"
-                }`}
-              >
-                Dịch Vụ Y Tế ({mockServices.length})
-              </button>
-              <button
-                onClick={() => setFilterType("course")}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition ${
-                  filterType === "course"
-                    ? "bg-sky-600 text-white shadow-sm"
-                    : "bg-white text-slate-600 border border-slate-200"
-                }`}
-              >
-                Khóa Đào Tạo ({mockCourses.length})
-              </button>
-            </Box>
-
-            {/* Cards List */}
-            <Box className="space-y-3">
-              {filteredItems.map((item) => (
-                <Box
-                  key={item.id}
-                  className="bg-white rounded-2xl p-4 card-shadow border border-slate-100 flex flex-col justify-between space-y-3"
+            {/* Category Pills (Figma Screen 2) */}
+            <div className="flex flex-wrap gap-2 text-xs">
+              {[
+                { id: 'all', label: 'Tất cả' },
+                { id: 'massage', label: 'Massage' },
+                { id: 'da', label: 'Chăm sóc da' },
+                { id: 'cothe', label: 'Chăm sóc cơ thể' },
+                { id: 'thugian', label: 'Thư giãn' },
+                { id: 'goilieutrinh', label: 'Gói liệu trình' },
+              ].map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => setServicesCategory(c.id)}
+                  className={`px-3 py-2 rounded-[7px] text-[10px] font-semibold whitespace-nowrap border transition active:scale-95 ${
+                    servicesCategory === c.id
+                      ? 'bg-[#A65317] text-white border-[#A65317]'
+                      : 'bg-white text-[#6F625B] border-[#DED2C5] hover:bg-[#F8EEE5]'
+                  }`}
                 >
-                  <Box className="flex items-start justify-between">
-                    <Box className="space-y-1 pr-2">
-                      <Box className="flex items-center space-x-2">
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-sky-50 text-sky-700 uppercase">
-                          {item.category}
-                        </span>
-                        {item.badge && (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-50 text-amber-700">
-                            ★ {item.badge}
-                          </span>
-                        )}
-                      </Box>
-                      <Text className="text-sm font-bold text-slate-800 leading-tight">
-                        {item.title}
-                      </Text>
-                      <Text className="text-xs text-slate-500 line-clamp-2">
-                        {item.description}
-                      </Text>
-                    </Box>
-                  </Box>
-
-                  <Box className="pt-2 border-t border-slate-100 flex items-center justify-between">
-                    <Box>
-                      <Text className="text-xs text-slate-400">Chi phí dự kiến</Text>
-                      <Text className="text-sm font-bold text-sky-700">{item.price}</Text>
-                    </Box>
-                    <button
-                      onClick={() => handleOpenBooking(item)}
-                      className="px-3.5 py-1.5 rounded-xl bg-sky-600 text-white text-xs font-semibold shadow-sm active:scale-95 transition flex items-center space-x-1"
-                    >
-                      <span>{item.type === "service" ? "Đặt Hẹn" : "Đăng Ký"}</span>
-                      <Icon icon="zi-chevron-right" className="text-xs" />
-                    </button>
-                  </Box>
-                </Box>
+                  {c.label}
+                </button>
               ))}
-            </Box>
+            </div>
 
-            {/* Featured Doctors Section */}
-            <Box className="space-y-2 pt-2">
-              <Box className="flex items-center justify-between">
-                <Text className="font-bold text-sm text-slate-800">
-                  Đội Ngũ Bác Sĩ & Chuyên Gia MLD
-                </Text>
-                <Text className="text-xs text-sky-600 font-medium">Xem tất cả</Text>
-              </Box>
-              <Box className="grid grid-cols-2 gap-2.5">
-                {doctors.map((doc, idx) => (
-                  <Box
-                    key={idx}
-                    className="bg-white rounded-2xl p-3 border border-slate-100 card-shadow flex flex-col items-center text-center space-y-1.5"
-                  >
+            {/* Filter & Sort Bar */}
+            <div className="flex items-end justify-between gap-3 pt-1">
+              <button
+                onClick={() => setServicesCategory('all')}
+                className="h-10 px-3 rounded-[7px] bg-white border border-[#D8C9BA] font-semibold text-[10px] text-[#A65317] flex items-center space-x-1.5"
+              >
+                <FilterIcon size={13} color="#98501B" />
+                <span>Bộ lọc</span>
+              </button>
+
+              <div className="flex-1 max-w-[210px] space-y-1 text-[10px] text-[#6F625B]">
+                <span className="block">Sắp xếp theo</span>
+                <select
+                  value={servicesSort}
+                  onChange={(e) => setServicesSort(e.target.value as any)}
+                  className="w-full h-10 bg-white border border-[#D8C9BA] rounded-[7px] px-3 font-medium text-[10px] text-[#40352F] outline-none cursor-pointer"
+                >
+                  <option value="popular">Phổ biến (minh họa)</option>
+                  <option value="priceAsc">Giá tăng dần</option>
+                  <option value="priceDesc">Giá giảm dần</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="text-[11px] font-bold text-[#40352F]">
+              {catalogServices.length} dịch vụ phù hợp
+            </div>
+            <Box className="space-y-3">
+              {catalogServices.map((service) => (
+                <Box
+                  key={service.id}
+                  onClick={() => setViewingService(service)}
+                  className="bg-white rounded-[8px] border border-[#E3D7CB] overflow-hidden cursor-pointer hover:border-[#A65317] transition"
+                >
+                  <div className="relative w-full h-[190px]">
                     <img
-                      src={doc.avatar}
-                      alt={doc.name}
-                      className="w-14 h-14 rounded-full object-cover shadow-sm border border-slate-100"
+                      src={service.image}
+                      alt={service.title}
+                      className="w-full h-full object-cover"
                     />
-                    <Text className="font-bold text-xs text-slate-800 line-clamp-1">
-                      {doc.name}
-                    </Text>
-                    <Text className="text-[10px] text-sky-600 font-medium line-clamp-1">
-                      {doc.role}
-                    </Text>
-                    <Text className="text-[10px] text-slate-400">{doc.exp}</Text>
                     <button
-                      onClick={() =>
-                        handleOpenBooking({
-                          id: `doc-${idx}`,
-                          type: "service",
-                          title: `Tư vấn cùng ${doc.name}`,
-                          category: "Bác Sĩ Chuyên Khoa",
-                          price: "350.000 đ",
-                          duration: "30 phút",
-                          rating: 5.0,
-                          reviewsCount: 40,
-                          description: doc.role,
-                        })
-                      }
-                      className="w-full mt-1 py-1 rounded-lg bg-sky-50 text-sky-700 text-[11px] font-semibold active:bg-sky-100 transition"
+                      type="button"
+                      onClick={(event) => event.stopPropagation()}
+                      className="absolute top-3 right-3 w-9 h-9 rounded-[8px] bg-white border border-[#E3D7CB] flex items-center justify-center shadow-sm"
+                      aria-label="Yêu thích"
                     >
-                      Đặt Hẹn Khám
+                      <HeartIcon size={18} color="#A65317" />
                     </button>
-                  </Box>
-                ))}
-              </Box>
-            </Box>
-          </Box>
-        )}
+                  </div>
+                  <Box className="p-3 space-y-2.5">
+                    <Box className="min-w-0 space-y-1">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-[9px] font-bold px-2 py-0.5 rounded-[4px] bg-[#F8EBDD] text-[#98501B]">
+                          {service.category}
+                        </span>
+                        <span className="text-[10px] text-stone-400 flex items-center space-x-1">
+                          <ClockIcon size={11} color="#A89F91" />
+                          <span>{service.durationMinutes} phút</span>
+                        </span>
+                      </div>
+                      <Text className="text-[13px] font-bold text-[#40352F] line-clamp-2 leading-tight">
+                        {service.title}
+                      </Text>
+                      <Text className="text-[11px] text-stone-500 line-clamp-2">
+                        {service.description}
+                      </Text>
+                    </Box>
 
-        {/* SERVICES TAB */}
-        {activeTab === "services" && (
-          <Box className="space-y-3 pt-2">
-            <Box className="bg-white rounded-2xl p-3 border border-slate-100 shadow-sm flex items-center space-x-2">
-              <Icon icon="zi-search" className="text-slate-400" />
-              <input
-                type="text"
-                placeholder="Tìm dịch vụ y tế, khám tại nhà..."
-                className="w-full text-xs outline-none bg-transparent"
-              />
-            </Box>
-            {mockServices.map((item) => (
-              <Box
-                key={item.id}
-                className="bg-white rounded-2xl p-4 card-shadow border border-slate-100 space-y-2.5"
-              >
-                <Box className="flex justify-between items-start">
-                  <Box className="space-y-1">
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-sky-50 text-sky-700 uppercase">
-                      {item.category}
-                    </span>
-                    <Text className="font-bold text-sm text-slate-800">{item.title}</Text>
-                    <Text className="text-xs text-slate-500">{item.description}</Text>
-                  </Box>
-                </Box>
-                <Box className="flex items-center justify-between pt-2 border-t border-slate-100">
-                  <Text className="font-bold text-sm text-sky-700">{item.price}</Text>
-                  <button
-                    onClick={() => handleOpenBooking(item)}
-                    className="px-4 py-1.5 rounded-xl bg-sky-600 text-white text-xs font-semibold active:scale-95 transition"
-                  >
-                    Đặt Lịch Khám
-                  </button>
-                </Box>
-              </Box>
-            ))}
-          </Box>
-        )}
+                  <Box className="flex items-center justify-between pt-2 border-t border-[#EADECF]">
+                    <Box>
+                      <Text className="text-[10px] text-stone-400">Chi phí gói</Text>
+                      <Text className="text-sm font-extrabold text-[#98501B]">
+                        {service.price.toLocaleString('vi-VN')}đ
+                      </Text>
+                    </Box>
 
-        {/* COURSES TAB */}
-        {activeTab === "courses" && (
-          <Box className="space-y-3 pt-2">
-            <Box className="bg-white rounded-2xl p-3 border border-slate-100 shadow-sm flex items-center space-x-2">
-              <Icon icon="zi-search" className="text-slate-400" />
-              <input
-                type="text"
-                placeholder="Tìm khóa học, chứng chỉ nghề..."
-                className="w-full text-xs outline-none bg-transparent"
-              />
-            </Box>
-            {mockCourses.map((item) => (
-              <Box
-                key={item.id}
-                className="bg-white rounded-2xl p-4 card-shadow border border-slate-100 space-y-2.5"
-              >
-                <Box className="flex justify-between items-start">
-                  <Box className="space-y-1">
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 uppercase">
-                      {item.category}
-                    </span>
-                    <Text className="font-bold text-sm text-slate-800">{item.title}</Text>
-                    <Text className="text-xs text-slate-500">{item.description}</Text>
-                    <Text className="text-[11px] text-slate-400">
-                      Thời lượng: {item.duration} | Giảng viên: {item.instructor}
-                    </Text>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setViewingService(service);
+                        }}
+                        className="px-3 py-2 rounded-[7px] bg-white text-[#98501B] text-[10px] font-bold border border-[#D8C9BA]"
+                      >
+                        Chi tiết
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openBooking(service);
+                        }}
+                        className="px-3.5 py-2 rounded-[7px] bg-[#A65317] hover:bg-[#8F4513] text-white text-[10px] font-bold active:scale-95 transition flex items-center space-x-1"
+                      >
+                        <span>Đặt Lịch</span>
+                        <ArrowRightIcon size={12} color="#FFFFFF" />
+                      </button>
+                    </div>
+                  </Box>
                   </Box>
                 </Box>
-                <Box className="flex items-center justify-between pt-2 border-t border-slate-100">
-                  <Text className="font-bold text-sm text-emerald-700">{item.price}</Text>
-                  <button
-                    onClick={() => handleOpenBooking(item)}
-                    className="px-4 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-semibold active:scale-95 transition"
-                  >
-                    Đăng Ký Học
-                  </button>
-                </Box>
-              </Box>
-            ))}
-          </Box>
-        )}
-
-        {/* BOOKINGS TAB */}
-        {activeTab === "bookings" && (
-          <Box className="space-y-3 pt-2">
-            <Text className="font-bold text-sm text-slate-800">
-              Lịch Hẹn Của Bạn ({myBookings.length})
-            </Text>
-            {myBookings.map((b) => (
-              <Box
-                key={b.id}
-                className="bg-white rounded-2xl p-4 card-shadow border border-slate-100 space-y-2"
-              >
-                <Box className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-sky-700 bg-sky-50 px-2 py-0.5 rounded">
-                    Mã: {b.id}
-                  </span>
-                  <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
-                    {b.status}
-                  </span>
-                </Box>
-                <Text className="font-bold text-sm text-slate-800">{b.title}</Text>
-                <Box className="text-xs text-slate-500 space-y-0.5">
-                  <Box className="flex items-center space-x-1">
-                    <Icon icon="zi-calendar" className="text-xs text-slate-400" />
-                    <span>{b.date}</span>
-                  </Box>
-                  <Box className="flex items-center space-x-1">
-                    <Icon icon="zi-location-solid" className="text-xs text-slate-400" />
-                    <span>{b.branch}</span>
-                  </Box>
-                </Box>
-                <Box className="pt-2 border-t border-slate-100 flex items-center justify-between">
-                  <Text className="text-xs font-bold text-sky-700">{b.price}</Text>
-                  <button
-                    onClick={() => {
-                      openSnackbar({
-                        text: "Đang mở tin nhắn tư vấn Zalo hỗ trợ lịch hẹn...",
-                        type: "info",
-                      });
-                    }}
-                    className="px-3 py-1 rounded-lg bg-sky-50 text-sky-700 text-xs font-medium active:bg-sky-100 transition"
-                  >
-                    Hỗ Trợ Zalo
-                  </button>
-                </Box>
-              </Box>
-            ))}
-          </Box>
-        )}
-      </Box>
-
-      {/* 3. MODAL ĐẶT LỊCH / ĐĂNG KÝ (QUICK BOOKING SHEET) */}
-      <Modal
-        visible={isBookingOpen}
-        onClose={() => setIsBookingOpen(false)}
-        title={selectedItem?.type === "course" ? "Đăng Ký Khóa Học" : "Đặt Lịch Khám & Chăm Sóc"}
-        mask
-      >
-        <Box className="space-y-3 pt-2 text-left">
-          <Box className="p-2.5 rounded-xl bg-sky-50 border border-sky-100">
-            <Text className="font-bold text-xs text-sky-900">{selectedItem?.title}</Text>
-            <Text className="text-[11px] text-sky-700 font-semibold mt-0.5">
-              Chi phí: {selectedItem?.price}
-            </Text>
-          </Box>
-
-          <Box className="space-y-1">
-            <Text className="text-xs font-semibold text-slate-700">Họ và tên của bạn</Text>
-            <Input
-              type="text"
-              placeholder="Nhập họ và tên"
-              value={customerName}
-              onChange={(e) => setCustomerName(e.target.value)}
-            />
-          </Box>
-
-          <Box className="space-y-1">
-            <Text className="text-xs font-semibold text-slate-700">Số điện thoại liên hệ</Text>
-            <Input
-              type="text"
-              placeholder="Nhập số điện thoại"
-              value={customerPhone}
-              onChange={(e) => setCustomerPhone(e.target.value)}
-            />
-          </Box>
-
-          <Box className="space-y-1">
-            <Text className="text-xs font-semibold text-slate-700">Chọn chi nhánh MLD</Text>
-            <Select
-              placeholder="Chọn chi nhánh"
-              value={selectedBranch}
-              onChange={(val) => setSelectedBranch(val as string)}
-            >
-              {branchList.map((branch, idx) => (
-                <Select.Option key={idx} value={branch} title={branch} />
               ))}
-            </Select>
+            </Box>
           </Box>
+        )}
 
-          <Box className="space-y-1">
-            <Text className="text-xs font-semibold text-slate-700">Ngày hẹn mong muốn</Text>
-            <Input
-              type="date"
-              value={bookingDate}
-              onChange={(e) => setBookingDate(e.target.value)}
+        {/* TAB 3: ĐẶT LỊCH & QUẢN LÝ LỊCH HẸN (FIGMA GROUP C: C01 -> C10) */}
+        {activeTab === 'booking' && (
+          <AppointmentsManager
+            bookings={bookings}
+            onUpdateBookings={(updated) => setBookings(updated)}
+            onBookNewService={() => openBooking(services[0])}
+            onRebookService={(title) => {
+              const matched = services.find((s) => s.title === title) || services[0];
+              openBooking(matched);
+            }}
+          />
+        )}
+
+        {/* TAB 4: HỌC VIỆN & ĐÀO TẠO NGHỀ (FIGMA GROUP E) */}
+        {activeTab === 'academy' && <GroupEAcademy courses={courses} />}
+
+        {/* TAB 5: HỘI VIÊN & CÁ NHÂN (FIGMA GROUP F VIP PASS) */}
+        {activeTab === 'profile' && (
+          <Box className="space-y-4">
+            <GroupFProfile
+              user={user}
+              onUserUpdated={setUser}
+              onOpenAppointments={() => setActiveTab('booking')}
+              onOpenPackages={() => {
+                setTreatmentInitialTab('packages');
+                setIsTreatmentOpen(true);
+              }}
+              onOpenAcademy={() => setActiveTab('academy')}
+              onOpenOnboarding={() => {
+                setCanCloseAuth(true);
+                setIsAuthOpen(true);
+              }}
             />
           </Box>
+        )}
+      </div>
 
-          <Box className="space-y-1">
-            <Text className="text-xs font-semibold text-slate-700">Ghi chú thêm (nếu có)</Text>
-            <Input
-              type="text"
-              placeholder="Nhu cầu hoặc triệu chứng..."
-              value={bookingNotes}
-              onChange={(e) => setBookingNotes(e.target.value)}
+      {/* ================= MODAL OVERLAYS & FLOWS ================= */}
+
+      {isNotificationsOpen && (
+        <NotificationCenter
+          notifications={notifications}
+          onChange={setNotifications}
+          onClose={() => setIsNotificationsOpen(false)}
+        />
+      )}
+
+      {/* 3. GROUP A: ONBOARDING & AUTH FLOW (A01 -> A06) */}
+      <GroupAAuthModal
+        isOpen={isAuthOpen}
+        onClose={() => setIsAuthOpen(false)}
+        onLoginSuccess={(loggedUser) => {
+          setUser(loggedUser);
+          setIsAuthOpen(false);
+          setActiveTab('home');
+        }}
+        initialStep="splash"
+        canClose={canCloseAuth}
+      />
+
+      {/* 4. GROUP B EXTENSIONS: SERVICE DETAIL MODAL (B03) */}
+      {viewingService && (
+        <ServiceDetailModal
+          service={viewingService}
+          onClose={() => setViewingService(null)}
+          onBookNow={(s) => {
+            setViewingService(null);
+            openBooking(s);
+          }}
+        />
+      )}
+
+      {/* 5. GROUP B EXTENSIONS: SPECIALIST DETAIL MODAL (B06) */}
+      {viewingDoctor && (
+        <SpecialistDetailModal
+          doctor={viewingDoctor}
+          onClose={() => setViewingDoctor(null)}
+          onBookWithDoctor={(doctor) => {
+            setViewingDoctor(null);
+            openBooking(services[0], null, doctor);
+          }}
+        />
+      )}
+
+      {/* 6. GROUP B EXTENSIONS: BRANCH DETAIL MODAL (B04) */}
+      {viewingBranch && (
+        <BranchDetailModal
+          branch={viewingBranch}
+          onClose={() => setViewingBranch(null)}
+          onSelectBranch={(br) => {
+            setViewingBranch(null);
+            openBooking(services[0], br);
+          }}
+          onOpenDirections={(br) => {
+            setViewingBranch(null);
+            setDirectionsBranch(br);
+          }}
+        />
+      )}
+
+      {/* 7. GROUP B EXTENSIONS: LOCATION & DIRECTIONS MODAL */}
+      {directionsBranch && (
+        <LocationDirectionsModal
+          branch={directionsBranch}
+          onClose={() => setDirectionsBranch(null)}
+          onBookAtBranch={(br) => {
+            setDirectionsBranch(null);
+            openBooking(services[0], br);
+          }}
+        />
+      )}
+
+      {isBranchDirectoryOpen && (
+        <BranchDirectoryModal
+          branches={branches}
+          onClose={() => setIsBranchDirectoryOpen(false)}
+          onSelectBranch={(branch) => {
+            setIsBranchDirectoryOpen(false);
+            setViewingBranch(branch);
+          }}
+        />
+      )}
+
+      {isSpecialistDirectoryOpen && (
+        <SpecialistDirectoryModal
+          doctors={doctors}
+          onClose={() => setIsSpecialistDirectoryOpen(false)}
+          onSelectDoctor={(doctor) => {
+            setIsSpecialistDirectoryOpen(false);
+            setViewingDoctor(doctor);
+          }}
+        />
+      )}
+
+      {/* 8. GROUP C: 4-STEP BOOKING FLOW MODAL (C01 -> C07) */}
+      {bookingService && (
+        <GroupCBooking
+          initialService={bookingService}
+          initialBranch={bookingBranch}
+          initialDoctor={bookingDoctor}
+          allServices={services}
+          doctors={doctors}
+          branches={branches}
+          onClose={() => {
+            setBookingService(null);
+            setBookingBranch(null);
+            setBookingDoctor(null);
+          }}
+          onBookingSuccess={handleBookingSuccess}
+        />
+      )}
+
+      {/* 9. GROUP C: E-TICKET QR PASS MODAL (C08) */}
+      {eTicketBooking && (
+        <ETicketGroupC
+          booking={eTicketBooking}
+          onClose={() => setETicketBooking(null)}
+          onGoToAppointments={() => {
+            setActiveTab('booking');
+            setETicketBooking(null);
+          }}
+        />
+      )}
+
+      {/* 10. GROUP D: EMR RECORDS & TELEHEALTH DEDICATED FULL PAGE */}
+      {isEMRModalOpen && (
+        <div className="absolute inset-0 z-50 bg-[#FAF6F0] flex flex-col overflow-hidden animate-fade-in">
+          <div className="bg-white border-b border-[#EADECF] px-4 py-3 flex items-center justify-between shadow-xs shrink-0">
+            <div className="flex items-center space-x-2.5">
+              <button
+                onClick={() => setIsEMRModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-[#FAF6F0] flex items-center justify-center text-[#40352F] hover:bg-[#EADECF] transition active:scale-95"
+              >
+                <ArrowLeftIcon size={16} color="#40352F" />
+              </button>
+              <h2 className="font-bold text-sm text-[#40352F]">Hồ sơ bệnh án điện tử (EMR)</h2>
+            </div>
+            <button
+              onClick={() => setIsEMRModalOpen(false)}
+              className="text-xs text-[#98501B] font-bold"
+            >
+              Đóng
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto pb-20">
+            <GroupDRecords records={records} />
+          </div>
+        </div>
+      )}
+
+      {/* 11. ZOOM SEARCH MODAL (FIGMA B02) */}
+      <GroupBSearch
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        onSelectService={(s) => {
+          setIsSearchOpen(false);
+          const found = services.find((x) => x.id === s.id) || services[0];
+          setViewingService(found);
+        }}
+        onSelectCourse={() => {
+          setIsSearchOpen(false);
+          setActiveTab('academy');
+        }}
+        onSelectBranch={(br) => {
+          setIsSearchOpen(false);
+          const found = branches.find((x) => x.id === br.id) || branches[0];
+          setViewingBranch(found);
+        }}
+        onSelectSpecialist={(sp) => {
+          setIsSearchOpen(false);
+          const found = doctors.find((x) => x.name.includes(sp.title)) || doctors[0];
+          setViewingDoctor(found);
+        }}
+      />
+
+      {/* 12. GROUP D: TREATMENT & CUSTOMER CARE MODAL (FIGMA D01 - D08) */}
+      {isTreatmentOpen && (
+        <div className="absolute inset-x-0 top-0 bottom-[68px] z-20 bg-[#FAF6F0] flex flex-col overflow-hidden animate-fade-in">
+          <div className="flex-1 overflow-y-auto">
+            <GroupDTreatment
+              key={treatmentInitialTab}
+              initialTab={treatmentInitialTab}
+              onOpenBooking={() => {
+                setIsTreatmentOpen(false);
+                openBooking(services[0]);
+              }}
             />
-          </Box>
+          </div>
+        </div>
+      )}
 
-          <Box className="pt-2 flex items-center space-x-2">
-            <Button
-              variant="secondary"
-              fullWidth
-              onClick={() => setIsBookingOpen(false)}
-            >
-              Hủy
-            </Button>
-            <Button
-              variant="primary"
-              fullWidth
-              onClick={handleConfirmBooking}
-            >
-              Xác Nhận Đặt
-            </Button>
-          </Box>
-        </Box>
-      </Modal>
-
-      {/* 4. BOTTOM NAVIGATION BAR */}
-      <Box className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 py-2 px-6 flex items-center justify-between z-30 card-shadow">
-        <button
-          onClick={() => setActiveTab("home")}
-          className={`flex flex-col items-center space-y-0.5 transition ${
-            activeTab === "home" ? "text-sky-600 font-bold" : "text-slate-400"
-          }`}
-        >
-          <Icon icon="zi-home" className="text-lg" />
-          <span className="text-[10px]">Trang chủ</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab("services")}
-          className={`flex flex-col items-center space-y-0.5 transition ${
-            activeTab === "services" ? "text-sky-600 font-bold" : "text-slate-400"
-          }`}
-        >
-          <span className="text-base leading-none">🩺</span>
-          <span className="text-[10px]">Dịch vụ</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab("courses")}
-          className={`flex flex-col items-center space-y-0.5 transition ${
-            activeTab === "courses" ? "text-sky-600 font-bold" : "text-slate-400"
-          }`}
-        >
-          <span className="text-base leading-none">🎓</span>
-          <span className="text-[10px]">Đào tạo</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab("bookings")}
-          className={`flex flex-col items-center space-y-0.5 transition ${
-            activeTab === "bookings" ? "text-sky-600 font-bold" : "text-slate-400"
-          }`}
-        >
-          <Icon icon="zi-calendar" className="text-lg" />
-          <span className="text-[10px]">Lịch hẹn</span>
-        </button>
-      </Box>
-    </Page>
+      {/* 13. BOTTOM NAVIGATION BAR (FIGMA DESIGN SYSTEM 02 — 5 TRẠNG THÁI) */}
+      <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-[#E8DDD2] z-30 shadow-[0_-2px_8px_rgba(64,53,47,0.05)]">
+        <div className="grid grid-cols-5 h-[62px] px-1">
+          {[
+            { key: 'home', label: 'Trang chủ', IconComponent: NavHomeIcon },
+            { key: 'services', label: 'Dịch vụ', IconComponent: NavServiceIcon },
+            { key: 'booking', label: 'Đặt lịch', IconComponent: NavCalendarIcon },
+            { key: 'academy', label: 'Học viện', IconComponent: NavAcademyIcon },
+            { key: 'profile', label: 'Cá nhân', IconComponent: NavProfileIcon },
+          ].map((tab) => {
+            const isActive = activeTab === tab.key;
+            const TabIcon = tab.IconComponent;
+            return (
+              <button
+                key={tab.key}
+                onClick={() => {
+                  setIsTreatmentOpen(false);
+                  if (tab.key === 'booking') {
+                    openBooking(services[0]);
+                  }
+                  setActiveTab(tab.key as any);
+                }}
+                className={`w-full h-[58px] flex flex-col items-center justify-center gap-1 transition-colors rounded-[10px] active:scale-[0.98] ${
+                  isActive
+                    ? 'bg-[#F3E4D3] text-[#98501B] font-semibold'
+                    : 'text-[#7A706A] hover:text-[#98501B] font-normal'
+                }`}
+              >
+                <TabIcon
+                  size={22}
+                  color={isActive ? '#98501B' : '#7A706A'}
+                  fill="none"
+                />
+                <span className="text-[10px] leading-none whitespace-nowrap">{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+        {/* iOS Home Indicator Bar */}
+        <div className="w-[104px] h-1 bg-[#1F1B18] rounded-full mx-auto mt-1 mb-1.5" />
+      </div>
+    </div>
+  </div>
   );
 }
 
-export default HomePage;
+export default MasterHomePage;

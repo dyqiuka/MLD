@@ -1,0 +1,319 @@
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+
+const responseJson = async (res: Response) => {
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) return { ...data, error: data.error || 'Có lỗi xảy ra. Vui lòng thử lại.', status: res.status };
+  return data;
+};
+
+export const apiClient = {
+  async getHealth() {
+    try {
+      const res = await fetch(`${API_BASE_URL}/health`);
+      return await res.json();
+    } catch {
+      return { status: 'mock' };
+    }
+  },
+
+  async getServices(category?: string, search?: string) {
+    try {
+      const params = new URLSearchParams();
+      if (category) params.append('category', category);
+      if (search) params.append('search', search);
+      const res = await fetch(`${API_BASE_URL}/services?${params.toString()}`);
+      if (!res.ok) throw new Error('API error');
+      return await res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  async getDoctors() {
+    try {
+      const res = await fetch(`${API_BASE_URL}/doctors`);
+      if (!res.ok) throw new Error('API error');
+      return await res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  async getBranches() {
+    try {
+      const res = await fetch(`${API_BASE_URL}/branches`);
+      if (!res.ok) throw new Error('API error');
+      return await res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  async createBooking(data: any) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/bookings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      return await responseJson(res);
+    } catch {
+      return { error: 'Không thể kết nối máy chủ. Vui lòng kiểm tra mạng và thử lại.' };
+    }
+  },
+
+  async getBookings() {
+    try {
+      const res = await fetch(`${API_BASE_URL}/bookings`);
+      if (!res.ok) throw new Error('API error');
+      return await res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  async rescheduleBooking(id: string, date: string, timeSlot: string) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/bookings/${id}/reschedule`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date, timeSlot }),
+      });
+      return await responseJson(res);
+    } catch (error) {
+      console.error('[API] rescheduleBooking failed', error);
+      return { error: 'Không thể kết nối máy chủ. Vui lòng thử lại.' };
+    }
+  },
+
+  async cancelBooking(id: string, reason?: string) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/bookings/${id}/cancel`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason }),
+      });
+      return await responseJson(res);
+    } catch (error) {
+      console.error('[API] cancelBooking failed', error);
+      return { error: 'Không thể kết nối máy chủ. Vui lòng thử lại.' };
+    }
+  },
+
+  async getCourses() {
+    try {
+      const res = await fetch(`${API_BASE_URL}/courses`);
+      if (!res.ok) throw new Error('API error');
+      return await res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  async submitQuiz(courseId: string, answers: any) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/courses/${courseId}/quiz/submit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answers }),
+      });
+      if (!res.ok) throw new Error('API error');
+      return await res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  async getMedicalRecords() {
+    try {
+      const res = await fetch(`${API_BASE_URL}/records`);
+      if (!res.ok) throw new Error('API error');
+      return await res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  async getMembership() {
+    try {
+      const res = await fetch(`${API_BASE_URL}/membership`);
+      if (!res.ok) throw new Error('API error');
+      return await res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  async applyVoucher(code: string, orderValue: number) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/vouchers/apply`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, orderValue }),
+      });
+      return await res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  async sendOtp(phone: string) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone }),
+      });
+      return await res.json();
+    } catch {
+      return { otpDemo: '246800' };
+    }
+  },
+
+  async verifyOtp(phone: string, otp: string, role = 'patient') {
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, otp, role }),
+      });
+      return await res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  async login(phone: string, role = 'patient') {
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, role }),
+      });
+      return await res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  async updateProfile(profileData: any) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/profile`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profileData),
+      });
+      return await responseJson(res);
+    } catch {
+      return { error: 'Không thể kết nối máy chủ. Vui lòng thử lại.' };
+    }
+  },
+
+  async getCurrentUser() {
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/me`);
+      return await responseJson(res);
+    } catch {
+      return null;
+    }
+  },
+
+  async getCourseEnrollments() {
+    try {
+      const res = await fetch(`${API_BASE_URL}/course-enrollments`);
+      return await responseJson(res);
+    } catch {
+      return null;
+    }
+  },
+
+  async enrollCourse(data: any) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/course-enrollments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      return await responseJson(res);
+    } catch {
+      return { error: 'Không thể kết nối máy chủ. Vui lòng thử lại.' };
+    }
+  },
+
+  async getNotifications() {
+    try {
+      const res = await fetch(`${API_BASE_URL}/notifications`);
+      return await responseJson(res);
+    } catch {
+      return null;
+    }
+  },
+
+  async markNotificationRead(id: string) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/notifications/${id}/read`, { method: 'PATCH' });
+      return await responseJson(res);
+    } catch {
+      return null;
+    }
+  },
+
+  async markAllNotificationsRead() {
+    try {
+      const res = await fetch(`${API_BASE_URL}/notifications/read-all`, { method: 'PATCH' });
+      return await responseJson(res);
+    } catch {
+      return null;
+    }
+  },
+
+  async getAdminOverview() {
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/overview`);
+      return await res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  async getAdminSchedule() {
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/schedule`);
+      return await res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  async getAdminReceipts() {
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/receipts`);
+      return await res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  async createAdminReceipt(data: any) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/receipts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      return await res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  async getAdminStudents() {
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/students`);
+      return await res.json();
+    } catch {
+      return null;
+    }
+  },
+};
+

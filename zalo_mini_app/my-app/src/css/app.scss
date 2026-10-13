@@ -2,6 +2,18 @@
   padding-bottom: 84px;
 }
 
+.mini-app-shell {
+  --app-safe-top: max(env(safe-area-inset-top, 0px), 24px);
+  height: calc(100dvh - var(--app-safe-top));
+  margin-top: var(--app-safe-top);
+}
+
+@media (min-width: 640px) {
+  .mini-app-shell {
+    margin-top: 0;
+  }
+}
+
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
