@@ -1,0 +1,208 @@
+import { BookingStatus, PrismaClient, UserRole } from '@prisma/client';
+import { database } from '../src/data/database.js';
+
+const prisma = new PrismaClient();
+
+const roleMap: Record<string, UserRole> = {
+  patient: UserRole.CUSTOMER,
+  student: UserRole.STUDENT,
+  admin: UserRole.ADMIN,
+};
+
+const bookingStatusMap: Record<string, BookingStatus> = {
+  pending: BookingStatus.PENDING,
+  confirmed: BookingStatus.CONFIRMED,
+  completed: BookingStatus.COMPLETED,
+  cancelled: BookingStatus.CANCELLED,
+};
+
+function slugify(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+}
+
+function bookingDate(date: string, timeSlot: string) {
+  const [day, month, year] = date.split('/').map(Number);
+  const [hour, minute] = timeSlot.split(' - ')[0].split(':').map(Number);
+  return new Date(Date.UTC(year, month - 1, day, hour - 7, minute));
+}
+
+async function main() {
+  for (const user of database.users) {
+    await prisma.user.upsert({
+      where: { id: user.id },
+      update: {
+        name: user.name,
+        phone: user.phone,
+        email: user.email,
+        avatarUrl: user.avatar,
+        role: roleMap[user.role] ?? UserRole.CUSTOMER,
+        tier: user.tier,
+        points: user.points,
+        dob: user.dob,
+        gender: user.gender,
+        address: user.address,
+      },
+      create: {
+        id: user.id,
+        name: user.name,
+        phone: user.phone,
+        email: user.email,
+        avatarUrl: user.avatar,
+        role: roleMap[user.role] ?? UserRole.CUSTOMER,
+        tier: user.tier,
+        points: user.points,
+        dob: user.dob,
+        gender: user.gender,
+        address: user.address,
+      },
+    });
+  }
+
+  for (const branch of database.branches) {
+    await prisma.branch.upsert({
+      where: { id: branch.id },
+      update: { name: branch.name, address: branch.address, city: branch.city, phone: branch.phone },
+      create: { id: branch.id, name: branch.name, address: branch.address, city: branch.city, phone: branch.phone },
+    });
+  }
+
+  for (const service of database.services) {
+    await prisma.service.upsert({
+      where: { id: service.id },
+      update: {
+        name: service.title,
+        slug: slugify(service.title),
+        category: service.category,
+        description: service.description,
+        durationMinutes: service.durationMinutes,
+        price: service.price,
+        originalPrice: service.originalPrice,
+        rating: service.rating,
+        reviewsCount: service.reviewsCount,
+        badge: service.badge,
+        imageUrl: service.image,
+        indicatorsCount: service.indicatorsCount,
+        preparationNotes: service.preparationNotes,
+      },
+      create: {
+        id: service.id,
+        name: service.title,
+        slug: slugify(service.title),
+        category: service.category,
+        description: service.description,
+        durationMinutes: service.durationMinutes,
+        price: service.price,
+        originalPrice: service.originalPrice,
+        rating: service.rating,
+        reviewsCount: service.reviewsCount,
+        badge: service.badge,
+        imageUrl: service.image,
+        indicatorsCount: service.indicatorsCount,
+        preparationNotes: service.preparationNotes,
+      },
+    });
+  }
+
+  for (const branch of database.branches) {
+    for (const service of database.services) {
+      await prisma.branchService.upsert({
+        where: { branchId_serviceId: { branchId: branch.id, serviceId: service.id } },
+        update: {},
+        create: { branchId: branch.id, serviceId: service.id },
+      });
+    }
+  }
+
+  for (const doctor of database.doctors) {
+    const branchId = doctor.hospital.includes('Cầu Giấy') ? 'br_02' : 'br_01';
+    await prisma.specialist.upsert({
+      where: { id: doctor.id },
+      update: {
+        branchId,
+        name: doctor.name,
+        title: doctor.title,
+        specialty: doctor.specialty,
+        workplace: doctor.hospital,
+        bio: doctor.bio,
+        avatarUrl: doctor.avatar,
+        experienceYears: doctor.experienceYears,
+        rating: doctor.rating,
+        reviewsCount: doctor.reviewsCount,
+        consultationFee: doctor.consultationFee,
+      },
+      create: {
+        id: doctor.id,
+        branchId,
+        name: doctor.name,
+        title: doctor.title,
+        specialty: doctor.specialty,
+        workplace: doctor.hospital,
+        bio: doctor.bio,
+        avatarUrl: doctor.avatar,
+        experienceYears: doctor.experienceYears,
+        rating: doctor.rating,
+        reviewsCount: doctor.reviewsCount,
+        consultationFee: doctor.consultationFee,
+      },
+    });
+
+    for (const service of database.services) {
+      await prisma.specialistService.upsert({
+        where: { specialistId_serviceId: { specialistId: doctor.id, serviceId: service.id } },
+        update: {},
+        create: { specialistId: doctor.id, serviceId: service.id },
+      });
+    }
+  }
+
+  for (const booking of database.bookings) {
+    await prisma.booking.upsert({
+      where: { id: booking.id },
+      update: {
+        scheduledAt: bookingDate(booking.date, booking.timeSlot),
+        status: bookingStatusMap[booking.status] ?? BookingStatus.PENDING,
+        notes: booking.notes,
+        totalAmount: booking.finalPrice,
+      },
+      create: {
+        id: booking.id,
+        code: booking.code,
+        userId: booking.userId,
+        branchId: booking.branchId,
+        serviceId: booking.serviceId,
+        specialistId: booking.doctorId,
+        scheduledAt: bookingDate(booking.date, booking.timeSlot),
+        status: bookingStatusMap[booking.status] ?? BookingStatus.PENDING,
+        notes: booking.notes,
+        totalAmount: booking.finalPrice,
+      },
+    });
+  }
+
+  const [users, branches, services, specialists, bookings] = await Promise.all([
+    prisma.user.count(),
+    prisma.branch.count(),
+    prisma.service.count(),
+    prisma.specialist.count(),
+    prisma.booking.count(),
+  ]);
+
+  console.log({ users, branches, services, specialists, bookings });
+}
+
+main()
+  .catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
+
